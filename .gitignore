@@ -1,3 +1,7 @@
+# .env にAPIキーを記述するので、git 管理しないようにする
+.env
+
+# 以下、gitignore 自動生成で python を指定して生成した内容
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
