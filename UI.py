@@ -1,11 +1,12 @@
 # UI.py の print メッセージは「黄色」で表示される
 import os
 import threading
+import queue
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
 from dotenv import load_dotenv
-from IGA import Gene
+from IGA import Gene, create_base_genes
 
 # .envファイルの読み込み
 load_dotenv(dotenv_path='settings.env')
@@ -17,7 +18,7 @@ FONT_SIZE = int(os.getenv("FONT_SIZE", 16))
 
 # 全UI要素を初期化し、メインイベントループを開始する
 def setup_ui():
-    global window, input_field, start_iga_loop_button, first_image_label, upload_button, input_text_label, explain_text_label, gene_data_frame, gene_data_label, generation_step_label, remaining_time_label
+    global window, input_field, start_iga_loop_button, first_image_label, upload_button, input_text_label, explain_text_label, gene_data_frame, gene_data_label, generation_step_label, remaining_time_label, result_queue
 
     # tkメインウィンドウを作成
     window = tk.Tk()
@@ -42,6 +43,9 @@ def setup_ui():
     generation_step_label = tk.Label(window, text="", font=("Arial", FONT_SIZE))
     # 想定残り時間表示ラベルを作成
     remaining_time_label = tk.Label(window, text="", font=("Arial", FONT_SIZE))
+
+    # 結果を格納するキューを作成
+    result_queue = queue.Queue()
 
     # 初期画面を表示（中断復帰の際は、ここをshow_generate_UI()に変更する）
     show_init_UI()
@@ -82,15 +86,32 @@ def start_iga_loop():
     show_generate_UI()
     input_text_label.config(text=f"目標: {input_text}")
 
-    # 8つの遺伝子を作成する
-    genes = [Gene(input_image, 0.0, 0, 0, 0.0, []) for _ in range(8)]
-    for gene in genes:
-        gene.create_base_gene()
-        gene.__str__()
+    # 別スレッドで遺伝子を作成する
+    gene_thread = threading.Thread(target=create_genes, args=(input_text, input_image, result_queue))
+    gene_thread.start()
 
-    # 遺伝子情報を表示
-    for i, gene in enumerate(genes):
-        gene_data_label[i].config(text=str(gene))
+    # スレッドの終了を待つ
+    window.after(100, lambda: check_thread(gene_thread))
+
+    # queueの中身を取得
+    genes = result_queue.get_nowait()
+    print(genes)
+    
+def check_thread(thread):
+    if thread.is_alive():
+        window.after(100, lambda: check_thread(thread))
+    else:
+        genes = result_queue.get()
+        for i, gene in enumerate(genes):
+            gene_data_label[i].config(text=str(gene))
+        print("遺伝子の作成が完了しました")
+
+def create_genes(input_text, input_image, result_queue):
+    # 8つの遺伝子を作成する
+    genes = create_base_genes(input_text, input_image)
+
+    # 結果をキューに入れる
+    result_queue.put(genes)
 
 def clear_ui():
     for widget in window.winfo_children():
@@ -109,6 +130,7 @@ def upload_image():
         first_image = first_image.resize((int(WINDOW_SIZE_HEIGHT * (500/1000)), int(WINDOW_SIZE_WIDTH * (500/1000))))
         first_image = ImageTk.PhotoImage(first_image)
         first_image_label.config(image=first_image)
-        
+        first_image_label.image = first_image  # 参照を保持するために必要
+
 if __name__ == "__main__":
     setup_ui()
