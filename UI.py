@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
 from dotenv import load_dotenv
+from IGA import Gene
 
 # .envファイルの読み込み
 load_dotenv(dotenv_path='settings.env')
@@ -16,7 +17,7 @@ FONT_SIZE = int(os.getenv("FONT_SIZE", 16))
 
 # 全UI要素を初期化し、メインイベントループを開始する
 def setup_ui():
-    global window, input_field, start_igaloop_button, init_image_label, upload_button
+    global window, input_field, start_iga_loop_button, first_image_label, upload_button, input_text_label, explain_text_label, gene_data_frame, gene_data_label, generation_step_label, remaining_time_label
 
     # tkメインウィンドウを作成
     window = tk.Tk()
@@ -25,11 +26,22 @@ def setup_ui():
     # 入力フィールドを作成
     input_field = tk.Text(window, font=("Arial", FONT_SIZE), width=int(WINDOW_SIZE_WIDTH * (70/1000)), height=4, wrap=tk.WORD)
     # 生成システム開始ボタンを作成
-    start_igaloop_button = tk.Button(window, text="生成システムを開始", font=("Arial", FONT_SIZE), width=int(WINDOW_SIZE_WIDTH * (40/1000)), height=2, command=show_generate_UI)
+    start_iga_loop_button = tk.Button(window, text="生成システムを開始", font=("Arial", FONT_SIZE), width=int(WINDOW_SIZE_WIDTH * (40/1000)), height=2, command=start_iga_loop)
     # 初期画像ラベルを作成
-    init_image_label = tk.Label(window, text="ここに画像が表示されます", font=("Arial", FONT_SIZE), bd=1, relief="solid")
+    first_image_label = tk.Label(window, text="ここに画像が表示されます", font=("Arial", FONT_SIZE), bd=1, relief="solid")
     # 画像アップロードボタンを作成
     upload_button = tk.Button(window, text="画像をアップロード", font=("Arial", FONT_SIZE), width=int(WINDOW_SIZE_WIDTH * (40/1000)), height=2, command=upload_image)
+    # 入力文章表示ラベルを作成
+    input_text_label = tk.Label(window, text="", font=("Arial", FONT_SIZE))
+    # 説明文章表示ラベルを作成
+    explain_text_label = tk.Label(window, text="", font=("Arial", FONT_SIZE))
+    # 遺伝子情報表示フレームと8個の遺伝子情報表示ラベルを作成
+    gene_data_frame = tk.Frame(window)
+    gene_data_label = [tk.Label(gene_data_frame, text=f"遺伝子{i+1}", font=("Arial", FONT_SIZE), wraplength=int(WINDOW_SIZE_WIDTH * (200/1000))) for i in range(8)]
+    # 現在世代数表示ラベルを作成
+    generation_step_label = tk.Label(window, text="", font=("Arial", FONT_SIZE))
+    # 想定残り時間表示ラベルを作成
+    remaining_time_label = tk.Label(window, text="", font=("Arial", FONT_SIZE))
 
     # 初期画面を表示（中断復帰の際は、ここをshow_generate_UI()に変更する）
     show_init_UI()
@@ -38,37 +50,65 @@ def setup_ui():
 
 # 初期UIを表示
 def show_init_UI():
-
     # 要素の配置
     input_field.pack(pady=10)
-    start_igaloop_button.pack(pady=10)
-    init_image_label.pack(pady=10)
+    start_iga_loop_button.pack(pady=10)
+    first_image_label.pack(pady=10)
     upload_button.pack(pady=10)
 
 # 生成中UIを表示
 def show_generate_UI():
+    # 要素の配置
     clear_ui()
+    input_text_label.pack(pady=10)
+    explain_text_label.pack(pady=10)
+    gene_data_frame.pack(pady=10)
+    for i in range(8):
+        gene_data_label[i].grid(row=(i//4), column=(i%4), padx=20, pady=10) # 2行4列に配置
+    generation_step_label.pack(pady=10)
+    remaining_time_label.pack(pady=10)
 
 # 評価UIを表示
 def show_evaluation_UI():
     clear_ui()
 
+# 初期UIから生成システムを開始する
+def start_iga_loop():
+    # まず入力文章と画像を取得
+    input_text = input_field.get("1.0", "end-1c")
+    input_image = first_image_label.cget("image")
+
+    # 生成中UIを表示
+    show_generate_UI()
+    input_text_label.config(text=f"目標: {input_text}")
+
+    # 8つの遺伝子を作成する
+    genes = [Gene(input_image, 0.0, 0, 0, 0.0, []) for _ in range(8)]
+    for gene in genes:
+        gene.create_base_gene()
+        gene.__str__()
+
+    # 遺伝子情報を表示
+    for i, gene in enumerate(genes):
+        gene_data_label[i].config(text=str(gene))
+
 def clear_ui():
     for widget in window.winfo_children():
-        widget.destroy()
+        widget.pack_forget()
+        widget
 
 def upload_image():
-    global init_image, init_image_path
-    init_image_path = filedialog.askopenfilename(
-        initialdir=r"C:\Users\吉岡拓真\Downloads\develop\SD_IGA_system\sample_images",
+    global first_image, first_image_path
+    first_image_path = filedialog.askopenfilename(
+        initialdir="D:\downloads\develop\SD_IGA_system\sample_images",
         filetypes=[("Image files", "*.jpg;*.jpeg;*.png")]
     )
     
-    if init_image_path:
-        init_image = Image.open(init_image_path)
-        init_image = init_image.resize((int(WINDOW_SIZE_HEIGHT * (250/1000)), int(WINDOW_SIZE_WIDTH * (250/1000))))
-        init_image = ImageTk.PhotoImage(init_image)
-        init_image_label.config(image=init_image)
+    if first_image_path:
+        first_image = Image.open(first_image_path)
+        first_image = first_image.resize((int(WINDOW_SIZE_HEIGHT * (500/1000)), int(WINDOW_SIZE_WIDTH * (500/1000))))
+        first_image = ImageTk.PhotoImage(first_image)
+        first_image_label.config(image=first_image)
         
 if __name__ == "__main__":
     setup_ui()
