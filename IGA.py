@@ -24,14 +24,14 @@ def create_base_genes(input_text, input_image):
     prompt_list = create_base_gene_prompts_from_GPT(length_list, input_text)
     
     for i in range(8):
-        # image_strings は 0.1 から 0.9 の間でランダムに生成
-        image_strings = round(random.uniform(0.1, 0.9), 2)
-        # seed は 0 から 100000 の間でランダムに生成
-        seed = random.randint(0, 100000)
+        # image_strings は 0.1 から 0.3 の間でランダムに生成
+        image_strings = round(random.uniform(0.1, 0.3), 2)
+        # seed は 0 から 10000 の間でランダムに生成
+        seed = random.randint(0, 10000)
         # prompt_length は 10 から 15 の間でランダムに生成
         prompt_length = length_list[i]
         # cfg_scale は 6.0 から 12.0 の間でランダムに生成
-        cfg_scale = round(random.uniform(6.0, 12.0), 2)
+        cfg_scale = round(random.uniform(6.0, 12.0), 1)
         
         gene = Gene(input_image, image_strings, seed, prompt_length, cfg_scale, prompt_list[i])
         genes.append(gene)

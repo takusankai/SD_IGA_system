@@ -2,3 +2,4 @@
 
 自然豊かで子供向けの遊具が充実した、落ち着く景色でありかつ子供たちが楽しめる公園の情景
 
+negative_prompt = "worst quality, low quality, medium quality, deleted, lowres, comic, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, watermark, username, blurry"
