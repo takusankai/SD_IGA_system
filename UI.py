@@ -2,15 +2,18 @@
 import os
 import threading
 import queue
+import time
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
 from dotenv import load_dotenv
 from IGA import Gene, create_base_genes
+from SD import ImageGenerator
 
 # .envファイルの読み込み
 load_dotenv(dotenv_path='settings.env')
-if not os.path.exists('settings.env'): print('\033[93msettings.env の読み込みに失敗した為、デフォルト値を使用します\033[0m')
+if not os.path.exists('settings.env'):
+    print('\033[93msettings.env の読み込みに失敗した為、UI 設定はデフォルト値を使用します\033[0m')
 # 環境変数の取得(読み込めなければデフォルト値を使用)
 WINDOW_SIZE_HEIGHT = int(os.getenv("WINDOW_SIZE_HEIGHT", 1300))
 WINDOW_SIZE_WIDTH = int(os.getenv("WINDOW_SIZE_WIDTH", 1300))
@@ -85,33 +88,18 @@ def start_iga_loop():
     # 生成中UIを表示
     show_generate_UI()
     input_text_label.config(text=f"目標: {input_text}")
+    generation_step_label.config(text="現在の世代数: 0")
+    remaining_time_label.config(text="想定時間: 15秒")
 
-    # 別スレッドで遺伝子を作成する
-    gene_thread = threading.Thread(target=create_genes, args=(input_text, input_image, result_queue))
-    gene_thread.start()
-
-    # スレッドの終了を待つ
-    window.after(100, lambda: check_thread(gene_thread))
-
-    # queueの中身を取得
-    genes = result_queue.get_nowait()
-    print(genes)
-    
-def check_thread(thread):
-    if thread.is_alive():
-        window.after(100, lambda: check_thread(thread))
-    else:
-        genes = result_queue.get()
-        for i, gene in enumerate(genes):
-            gene_data_label[i].config(text=str(gene))
-        print("遺伝子の作成が完了しました")
-
-def create_genes(input_text, input_image, result_queue):
-    # 8つの遺伝子を作成する
+    # 8つの遺伝子を作成し、表示する
     genes = create_base_genes(input_text, input_image)
-
-    # 結果をキューに入れる
-    result_queue.put(genes)
+    for i, gene in enumerate(genes):
+        gene_data_label[i].config(text=str(gene))
+        print(f"\033[93m遺伝子{i+1}の情報: {gene}\033[0m")
+    
+    # 作成した遺伝子を元に画像生成を実行し、表示する
+    base_generator = ImageGenerator()
+    base_images = base_generator.generate_images(genes)
 
 def clear_ui():
     for widget in window.winfo_children():
@@ -130,7 +118,6 @@ def upload_image():
         first_image = first_image.resize((int(WINDOW_SIZE_HEIGHT * (500/1000)), int(WINDOW_SIZE_WIDTH * (500/1000))))
         first_image = ImageTk.PhotoImage(first_image)
         first_image_label.config(image=first_image)
-        first_image_label.image = first_image  # 参照を保持するために必要
 
 if __name__ == "__main__":
     setup_ui()

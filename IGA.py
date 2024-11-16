@@ -35,6 +35,6 @@ def create_base_genes(input_text, input_image):
         
         gene = Gene(input_image, image_strings, seed, prompt_length, cfg_scale, prompt_list[i])
         genes.append(gene)
-        print(f"\033[95m遺伝子{i+1} の情報: {genes[i]}\033[0m")
 
+    print(f"\033[95m初期の8個の遺伝子を作成しました\033[0m")
     return genes

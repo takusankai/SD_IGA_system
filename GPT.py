@@ -16,15 +16,21 @@ class response_format(BaseModel):
     prompt_words: list[str]
 
 def create_base_gene_prompts_from_GPT(length_list, input_text):
-    print("\033[92mGPTを使用して初期遺伝子のプロンプトを生成します\033[0m")
-    prompt_list = []
+    # .envファイルの読み込み
+    load_dotenv(dotenv_path='settings.env')
+    if not os.path.exists('settings.env'):
+        print('\033[92msettings.env の読み込みに失敗した為、辞書語数はデフォルト値を使用します\033[0m')
 
+    dictionary_size = os.getenv("DICTIONARY_SIZE", "100")
+    dictionary_language = os.getenv("DICTIONARY_LANGUAGE", "English")
+    prompt_list = []
+    
     # GPTへのリクエスト
     completion = openai.beta.chat.completions.parse(
         model="gpt-4o-2024-08-06",
         messages=[
-            # あなたはユーザーの入力を受け取って、その内容に関連した100個の画像生成AIのプロンプトとなる英語の単語を提案します。
-            {"role": "system", "content": "You take the user's input and suggest 100 English words that will prompt for the image-generating AI related to that content."},
+            # あなたはユーザーの入力を受け取って、その内容に関連した {dictionary_size} 個の画像生成AIのプロンプトとなる {dictionary_language] の単語を提案します。
+            {"role": "system", "content": f"You take the user's input and suggest {dictionary_size} {dictionary_language} words that will prompt for the image-generating AI related to that content."},
             {"role": "user", "content": input_text},
         ],
         response_format=response_format,
