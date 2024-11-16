@@ -1,0 +1,9 @@
+id,generation,evaluation_score,this_image_name,init_image_name,image_strings,seed,steps,prompt_length,cfg_scale,prompt
+1,1,,generated_image_49.jpg,inumemachi_2.JPG,0.21,3043,81,11,11.7,['adventure', "children's", 'friendly', 'greenery', 'bright', 'trees', 'playground', 'environment', 'peaceful', 'landscape', 'nature']
+2,1,,generated_image_50.jpg,inumemachi_2.JPG,0.13,4732,68,14,8.8,['greenery', 'adventure', 'relaxing', "children's", 'outdoor', 'playground', 'happy', 'friendly', 'environment', 'park', 'lush', 'play', 'playful', 'landscape']
+3,1,,generated_image_51.jpg,inumemachi_2.JPG,0.13,4585,52,15,8.3,['joyful', 'serene', 'happy', 'relaxing', 'family-friendly', 'playful', 'outdoor', 'peaceful', 'playground', 'adventure', 'fun', 'grass', 'tranquil', 'lush', 'friendly']
+4,1,,generated_image_52.jpg,inumemachi_2.JPG,0.11,3107,92,14,7.5,['adventure', 'landscape', 'bright', 'safe', 'outdoor', 'tranquil', 'grass', 'friendly', 'equipment', 'happy', 'serene', 'relaxing', 'joyful', "children's"]
+5,1,,generated_image_53.jpg,inumemachi_2.JPG,0.12,6364,62,11,6.0,['grass', 'trees', 'relaxing', 'landscape', 'environment', 'kids', 'recreation', 'nature', 'joyful', 'serene', 'scenic']
+6,1,,generated_image_54.jpg,inumemachi_2.JPG,0.2,6185,88,13,10.8,['joyful', 'relaxing', 'outdoor', 'safe', 'lush', 'friendly', 'fun', 'landscape', 'adventure', 'park', 'peaceful', 'family-friendly', 'serene']
+7,1,,generated_image_55.jpg,inumemachi_2.JPG,0.19,236,51,14,10.7,['safe', 'playful', 'peaceful', 'tranquil', 'nature', "children's", 'recreation', 'kids', 'scenic', 'environment', 'park', 'family-friendly', 'outdoor', 'trees']
+8,1,,generated_image_56.jpg,inumemachi_2.JPG,0.17,8710,96,15,11.7,['greenery', 'happy', 'equipment', 'environment', 'family-friendly', 'bright', 'scenic', 'safe', 'joyful', 'nature', 'lush', 'peaceful', 'grass', 'tranquil', 'relaxing']

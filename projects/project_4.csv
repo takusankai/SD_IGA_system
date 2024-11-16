@@ -1,0 +1,9 @@
+id,generation,evaluation_score,this_image_name,init_image_name,image_strings,seed,steps,prompt_length,cfg_scale,prompt
+1,1,,generated_image_73.jpg,syouritu_2_before.png,0.16,5780,70,13,11.2,['park', 'greenery', 'grass', 'tranquil', 'colorful', 'happy', 'swings', 'nature', 'activities', 'playground', 'laughter', 'kid-friendly', 'environment']
+2,1,,generated_image_74.jpg,syouritu_2_before.png,0.21,2550,68,11,6.3,['open', 'tranquil', 'park', 'landscape', 'outdoors', 'environment', 'recreation', 'adventure', 'picnic', 'colorful', 'trees']
+3,1,,generated_image_75.jpg,syouritu_2_before.png,0.14,4112,97,10,11.9,['kid-friendly', 'nature', 'playground', 'activities', 'space', 'laughter', 'safe', 'family', 'adventure', 'picnic']
+4,1,,generated_image_76.jpg,syouritu_2_before.png,0.11,8962,51,10,10.8,['grass', 'activities', 'toys', 'park', 'laughter', 'family', 'safe', 'outdoors', 'happy', 'adventure']
+5,1,,generated_image_77.jpg,syouritu_2_before.png,0.29,9603,55,13,7.2,['space', 'joy', 'nature', 'environment', 'trees', 'slides', 'grass', 'picnic', 'tranquil', 'adventure', 'safe', 'greenery', 'children']
+6,1,,generated_image_78.jpg,syouritu_2_before.png,0.28,9045,75,15,7.0,['trees', 'picnic', 'playground', 'children', 'swings', 'scenic', 'family', 'slides', 'park', 'activities', 'laughter', 'recreation', 'joy', 'fun', 'relaxing']
+7,1,,generated_image_79.jpg,syouritu_2_before.png,0.2,9772,79,11,8.6,['scenic', 'kid-friendly', 'playground', 'outdoors', 'park', 'nature', 'landscape', 'space', 'environment', 'slides', 'safe']
+8,1,,generated_image_80.jpg,syouritu_2_before.png,0.24,980,59,11,9.6,['nature', 'colorful', 'picnic', 'fun', 'slides', 'outdoors', 'open', 'swings', 'activities', 'landscape', 'kid-friendly']

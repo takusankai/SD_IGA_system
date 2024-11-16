@@ -21,7 +21,7 @@ FONT_SIZE = int(os.getenv("FONT_SIZE", 16))
 
 # 全UI要素を初期化し、メインイベントループを開始する
 def setup_ui():
-    global window, input_field, start_iga_loop_button, first_image_label, upload_button, input_text_label, explain_text_label, gene_data_frame, gene_data_label, generation_step_label, remaining_time_label, generated_image_frame, generated_image_label, slider, slider_value_label, next_generation_button, result_queue
+    global window, input_field, start_iga_loop_button, first_image_label, upload_button, input_text_label, explain_text_label, gene_data_frame, gene_data_label, generation_step_label, remaining_time_label, generated_image_frame, generated_image_label, slider, next_generation_button, result_queue
     # tkメインウィンドウを作成
     window = tk.Tk()
     window.geometry(f"{WINDOW_SIZE_HEIGHT}x{WINDOW_SIZE_WIDTH}")
@@ -29,7 +29,7 @@ def setup_ui():
     # 入力フィールドを作成
     input_field = tk.Text(window, font=("Arial", FONT_SIZE), width=int(WINDOW_SIZE_WIDTH * (70/1000)), height=4, wrap=tk.WORD)
     # 生成システム開始ボタンを作成
-    start_iga_loop_button = tk.Button(window, text="生成システムを開始", font=("Arial", FONT_SIZE), width=int(WINDOW_SIZE_WIDTH * (40/1000)), height=2, command=start_iga_loop)
+    start_iga_loop_button = tk.Button(window, text="生成システムを開始", font=("Arial", FONT_SIZE), width=int(WINDOW_SIZE_WIDTH * (40/1000)), height=2, command=first_iga_loop)
     # 初期画像ラベルを作成
     first_image_label = tk.Label(window, text="ここに画像が表示されます", font=("Arial", FONT_SIZE), bd=1, relief="solid")
     # 画像アップロードボタンを作成
@@ -48,9 +48,8 @@ def setup_ui():
     # 生成画像表示フレームと8個の生成画像表示ラベルを作成
     generated_image_frame = tk.Frame(window)
     generated_image_label = [tk.Label(generated_image_frame, text=f"生成画像{i+1}", font=("Arial", FONT_SIZE), wraplength=int(WINDOW_SIZE_WIDTH * (200/1000))) for i in range(8)]
-    # スライダーと文字表示枠を作成
+    # スライダーを作成
     slider = [tk.Scale(generated_image_frame, from_=0, to=100, orient=tk.HORIZONTAL) for _ in range(8)]
-    slider_value_label = [tk.Label(generated_image_frame, text="0", font=("Arial", FONT_SIZE)) for _ in range(8)]
     # 次の世代へ進むボタンを作成
     next_generation_button = tk.Button(window, text="次の世代へ進む", font=("Arial", FONT_SIZE), width=int(WINDOW_SIZE_WIDTH * (40/1000)), height=2, command=iga_loop)
 
@@ -76,16 +75,15 @@ def show_generate_UI():
     clear_ui()
     input_text_label.pack(pady=10)
     explain_text_label.pack(pady=10)
-    explain_text_label.config(text="以下に表示される遺伝子情報を元に、画像生成を行っています。")
+    explain_text_label.config(text="以下の遺伝子情報を元に、画像生成を行っています。")
     gene_data_frame.pack(pady=10)
     for i in range(8):
-        gene_data_label[i].grid(row=(i//4), column=(i%4), padx=20, pady=10)
+        gene_data_label[i].grid(row=(i//4), column=(i%4), padx=20, pady=10) # 2行4列に配置
     generation_step_label.pack(pady=10)
     remaining_time_label.pack(pady=10)
 
 # 評価UIを表示
 def show_evaluation_UI():
-    # 要素の配置
     clear_ui()
     input_text_label.pack(pady=10)
     explain_text_label.pack(pady=10)
@@ -94,14 +92,12 @@ def show_evaluation_UI():
     for i in range(8):
         generated_image_label[i].grid(row=(i//4), column=(i%4), padx=20, pady=20)
         slider[i].grid(row=(i//4)+2, column=(i%4), padx=20, pady=20)
-        slider_value_label[i].grid(row=(i//4)+3, column=(i%4), padx=20, pady=20)
-        slider[i].config(command=lambda val, idx=i: slider_value_label[idx].config(text=val))
+        # slider[i].config(command=lambda val, idx=i: slider[i].config(label=val))
     next_generation_button.pack(pady=10)
 
 def clear_ui():
     for widget in window.winfo_children():
         widget.pack_forget()
-        widget
 
 def upload_image():
     global first_image, first_image_path
@@ -112,12 +108,17 @@ def upload_image():
     
     if first_image_path:
         first_image = Image.open(first_image_path)
-        first_image = first_image.resize((int(WINDOW_SIZE_HEIGHT * (500/1000)), int(WINDOW_SIZE_WIDTH * (500/1000))))
+        first_image = first_image.resize((int(WINDOW_SIZE_HEIGHT * (600/1000)), int(WINDOW_SIZE_WIDTH * (600/1000))))
         first_image = ImageTk.PhotoImage(first_image)
         first_image_label.config(image=first_image)
 
+def update_remaining_time(seconds):
+    for remaining in range(seconds, -1, -1):
+        remaining_time_label.config(text=f"およその残り時間: {remaining}秒")
+        time.sleep(1)
+
 # 初期UIから1週目の生成システムを開始する
-def start_iga_loop():
+def first_iga_loop():
     global first_image_path
     # まず入力文章と画像を取得
     input_text = input_field.get("1.0", "end-1c")
@@ -126,8 +127,8 @@ def start_iga_loop():
     # 生成中UIを表示
     show_generate_UI()
     input_text_label.config(text=f"目標: {input_text}")
-    generation_step_label.config(text="現在の世代数: 0")
-    remaining_time_label.config(text="想定時間: 15秒")
+    generation_step_label.config(text="現在の世代数: 1")
+    remaining_time_label.config(text="およその残り時間: 20秒")
 
     # 8つの初期遺伝子を作成し、表示する
     genes = create_base_genes(input_text, input_image)
@@ -135,9 +136,12 @@ def start_iga_loop():
         gene_data_label[i].config(text=str(gene))
         print(f"\033[93m遺伝子{i+1}の情報: {gene}\033[0m")
 
-    threading.Thread(target=start_iga_loop_generate_thread, args=(genes,)).start()
+    # カウントダウンタイマースレッドを開始
+    threading.Thread(target=update_remaining_time, args=(25,)).start()
+    # 画像生成スレッドを開始
+    threading.Thread(target=first_iga_loop_generate_thread, args=(genes,)).start()
 
-def start_iga_loop_generate_thread(genes):
+def first_iga_loop_generate_thread(genes):
     # 作成した遺伝子を元に画像生成を実行し、表示する
     base_generator = ImageGenerator()
     base_images = base_generator.generate_images(genes)
@@ -166,8 +170,7 @@ def init_project_csv(genes, image_names):
         last_project_number = project_numbers[-1]
     else:
         last_project_number = 0
-        print("\033[93mprojectsディレクトリ内に画像が存在しないため、project_1.jpgとして保存します。\033[0m")
-        
+        print("\033[93mprojectsディレクトリ内に画像が存在しないため、project_1.jpgとして保存します。\033[0m")   
     project_name = "project_" + str(last_project_number + 1) + ".csv"
 
     # project_name で新規プロジェクトcsvを作成し、情報を保存する
@@ -175,12 +178,17 @@ def init_project_csv(genes, image_names):
     # idは1から8までの連番、評価はこの段階では何も保存しない、世代は1である、init_image_nameはfirst_image_pathを加工して末尾を切り出す
     init_image_name = first_image_path.split("/")[-1]
     with open(os.path.join("projects", project_name), "w") as f:
-        f.write("id,generation,evaluation_score,this_image_name,init_image_name,image_strings,seed,prompt_length,cfg_scale,prompt\n")
+        f.write("id,generation,evaluation_score,this_image_name,init_image_name,image_strings,seed,steps,prompt_length,cfg_scale,prompt\n")
         for i, gene in enumerate(genes):
-            f.write(f"{i+1},1,,{image_names[i]},{init_image_name},{gene.image_strings},{gene.seed},{gene.prompt_length},{gene.cfg_scale},{gene.prompt}\n")
-       
+            f.write(f"{i+1},1,,{image_names[i]},{init_image_name},{gene.image_strings},{gene.seed},{gene.steps},{gene.prompt_length},{gene.cfg_scale},{gene.prompt}\n")
+            
 def iga_loop():
     # まず評価点数を取得し、csvに保存
+    evaluation_scores = [slider[i].get() for i in range(8)]
+    project_files = os.listdir("projects")
+    project_numbers = [int(f.split("_")[-1].split(".")[0]) for f in project_files if f.startswith("project_")]
+    project_numbers.sort()
+    project_name = "project_" + str(project_numbers[-1]) + ".csv"
 
     # 生成中UIを表示
 
@@ -192,6 +200,9 @@ def iga_loop():
 
     # 評価UIを呼び出し、生成画像を表示する
     
+    pass
+
+def iga_loop_generate_thread():
     pass
 
 if __name__ == "__main__":

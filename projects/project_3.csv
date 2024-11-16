@@ -1,0 +1,9 @@
+id,generation,evaluation_score,this_image_name,init_image_name,image_strings,seed,steps,prompt_length,cfg_scale,prompt
+1,1,,generated_image_65.jpg,syouritu_2_before.png,0.22,1872,72,11,8.7,['iteration', 'display', 'change', 'Tkinter', 'programming', 'Python', 'application', 'update', 'Lambda', 'code', 'label']
+2,1,,generated_image_66.jpg,syouritu_2_before.png,0.18,2602,90,13,7.7,['control', 'modify', 'loop', 'label', 'interface', 'function', 'GUI', 'value', 'Python', 'display', 'Tkinter', 'parameter', 'respond']
+3,1,,generated_image_67.jpg,syouritu_2_before.png,0.14,317,73,14,11.0,['respond', 'loop', 'functionality', 'interface', 'value', 'programming', 'iteration', 'modify', 'event', 'toolkit', 'execute', 'index', 'dynamic', 'slider']
+4,1,,generated_image_68.jpg,syouritu_2_before.png,0.23,3952,65,10,11.2,['event', 'application', 'label', 'respond', 'dynamic', 'code', 'Python', 'widget', 'change', 'function']
+5,1,,generated_image_69.jpg,syouritu_2_before.png,0.1,4643,67,11,11.0,['Tkinter', 'iteration', 'dynamic', 'value', 'control', 'application', 'loop', 'change', 'modify', 'toolkit', 'input']
+6,1,,generated_image_70.jpg,syouritu_2_before.png,0.23,3061,53,12,11.2,['widget', 'Python', 'control', 'callback', 'parameter', 'update', 'slider', 'Lambda', 'execute', 'toolkit', 'functionality', 'label']
+7,1,,generated_image_71.jpg,syouritu_2_before.png,0.2,2008,96,12,10.2,['slider', 'respond', 'control', 'parameter', 'update', 'input', 'display', 'functionality', 'label', 'dynamic', 'Tkinter', 'execute']
+8,1,,generated_image_72.jpg,syouritu_2_before.png,0.2,242,88,15,10.7,['execute', 'loop', 'respond', 'slider', 'modify', 'control', 'event', 'dynamic', 'display', 'input', 'update', 'change', 'label', 'function', 'toolkit']

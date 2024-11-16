@@ -1,0 +1,9 @@
+id,generation,evaluation_score,this_image_name,init_image_name,image_strings,seed,steps,prompt_length,cfg_scale,prompt
+1,1,,generated_image_57.jpg,inumemachi_2.JPG,0.25,3146,89,13,7.2,['swings', 'beautiful', 'tranquil', 'scenic', 'kids', 'picnic', 'fun', 'enjoy', 'forest', 'green', 'joy', 'outing', 'park']
+2,1,,generated_image_58.jpg,inumemachi_2.JPG,0.18,3776,94,12,6.2,['joy', 'forest', 'peaceful', 'park', 'landscape', 'adventure', 'kids', 'happy', 'lush', 'nature', 'green', 'outdoors']
+3,1,,generated_image_59.jpg,inumemachi_2.JPG,0.2,3689,94,14,8.0,['nature', 'lush', 'fun', 'family', 'scenic', 'happy', 'outing', 'landscape', 'green', 'trees', 'beautiful', 'recreation', 'joy', 'enjoy']
+4,1,,generated_image_60.jpg,inumemachi_2.JPG,0.13,2287,81,10,6.9,['family', 'park', 'nature', 'natural', 'active', 'peaceful', 'playground', 'fun', 'swings', 'picnic']
+5,1,,generated_image_61.jpg,inumemachi_2.JPG,0.19,8011,62,10,9.8,['active', 'nature', 'kids', 'green', 'scenic', 'natural', 'playground', 'peaceful', 'outdoors', 'forest']
+6,1,,generated_image_62.jpg,inumemachi_2.JPG,0.12,3095,80,13,9.0,['swings', 'outdoors', 'scenic', 'recreation', 'active', 'tranquil', 'outing', 'slides', 'adventure', 'family', 'beautiful', 'park', 'picnic']
+7,1,,generated_image_63.jpg,inumemachi_2.JPG,0.25,8462,92,13,6.3,['outdoors', 'green', 'nature', 'tranquil', 'natural', 'beautiful', 'landscape', 'peaceful', 'enjoy', "children's", 'picnic', 'forest', 'play']
+8,1,,generated_image_64.jpg,inumemachi_2.JPG,0.17,4961,98,12,10.1,['picnic', 'kids', 'family', 'landscape', "children's", 'playground', 'grass', 'active', 'outing', 'park', 'tranquil', 'peaceful']
