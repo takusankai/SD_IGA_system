@@ -1,9 +1,0 @@
-id,generation,evaluation_score,this_image_name,init_image_name,image_strings,seed,steps,prompt_length,cfg_scale,prompt
-1,1,,generated_image_81.jpg,inumemachi_2.JPG,0.1,9294,88,10,8.3,"['park', 'serene', 'picnic', 'sliding', 'meadow', 'trees', 'playground', 'scenic', 'sunshine', 'children']"
-2,1,,generated_image_82.jpg,inumemachi_2.JPG,0.35,6236,72,15,9.2,"['serene', 'swings', 'family', 'outdoor', 'jungle gym', 'peaceful', 'benches', 'pathway', 'trees', 'nature', 'sunshine', 'scenic', 'meadow', 'recreational area', 'children']"
-3,1,,generated_image_83.jpg,inumemachi_2.JPG,0.16,4974,73,14,6.7,"['benches', 'peaceful', 'sliding', 'greenery', 'scenic', 'children', 'fun', 'serene', 'picnic', 'meadow', 'family', 'grass', 'pathway', 'trees']"
-4,1,,generated_image_84.jpg,inumemachi_2.JPG,0.33,2554,56,12,7.3,"['sandbox', 'sunshine', 'greenery', 'park', 'relaxing', 'open space', 'swings', 'scenic', 'jungle gym', 'adventure', 'landscape', 'trees']"
-5,1,,generated_image_85.jpg,inumemachi_2.JPG,0.26,9905,88,14,10.5,"['outdoor', 'meadow', 'nature', 'children', 'park', 'pathway', 'peaceful', 'birds', 'swings', 'sliding', 'recreational area', 'sunshine', 'sandbox', 'greenery']"
-6,1,,generated_image_86.jpg,inumemachi_2.JPG,0.22,7811,100,10,11.4,"['meadow', 'pathway', 'greenery', 'sliding', 'lush', 'sunshine', 'grass', 'birds', 'flowers', 'adventure']"
-7,1,,generated_image_87.jpg,inumemachi_2.JPG,0.32,6130,60,12,11.2,"['swings', 'benches', 'nature', 'jungle gym', 'relaxing', 'pathway', 'greenery', 'family', 'recreational area', 'park', 'lush', 'sliding']"
-8,1,,generated_image_88.jpg,inumemachi_2.JPG,0.28,9366,51,11,6.4,"['benches', 'sandbox', 'children', 'open space', 'birds', 'grass', 'landscape', 'swings', 'sunshine', 'recreational area', 'trees']"

@@ -72,15 +72,15 @@ class ImageGenerator:
 
             prompt = ", ".join(gene.prompt)
             generator = torch.Generator(device=self.device).manual_seed(gene.seed)
-            # num_inference_steps * image_strings = stepsとなるように調整
-            num_inference_steps = int(gene.steps / gene.image_strings) + 1
+            # num_inference_steps * image_strengs = stepsとなるように調整
+            num_inference_steps = int(gene.steps / gene.image_strengs) + 1
 
             image = pipe(
                 # Geneクラスのプロパティを使用
                 prompt,
                 guidance_scale = gene.cfg_scale,
                 image = gene.init_image,
-                strength = gene.image_strings,
+                strength = gene.image_strengs,
                 generator = generator,
                 num_inference_steps = num_inference_steps,
                 
