@@ -3,6 +3,7 @@ from PIL import Image
 from typing import List
 import random
 from GPT import create_base_gene_prompts_from_GPT
+from IGA_modules.IGA_module_2 import interactive_Genetic_algorithm # ここを書き換える形で IGA のモジュールを変更する
 
 class Gene:
     def __init__(self, init_image: Image.Image, image_strengs: float, seed: int, steps: int, prompt_length: int, cfg_scale: float, prompt: List[str], evaluation_score: int, init_image_name: str):
@@ -46,4 +47,5 @@ def create_base_genes(input_text, input_image):
 
 # ループ時の次世代の遺伝子の構築
 def create_next_generation_genes(genes):
-    return genes
+    new_genes = interactive_Genetic_algorithm(genes)
+    return new_genes
