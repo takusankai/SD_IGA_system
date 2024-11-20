@@ -6,7 +6,7 @@ import torch
 from PIL import Image
 from diffusers import StableDiffusionImg2ImgPipeline
 from dotenv import load_dotenv
-from IGA import Gene
+from GENE import Gene
 
 class ImageGenerator:
     def __init__(self, width=256, height=256, num_images=8):

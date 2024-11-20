@@ -9,7 +9,8 @@ import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
 from dotenv import load_dotenv
-from IGA import Gene, create_base_genes, create_next_generation_genes
+from IGA import create_base_genes, create_next_generation_genes
+from GENE import Gene
 from SD import ImageGenerator
 
 # .envファイルの読み込み
@@ -27,7 +28,7 @@ result_queue = queue.Queue()
 # 現在の生成ステップ数を保持
 generation = 1
 # ループ終了世代数を設定
-end_loop_generation = 3
+end_loop_generation = 10
 
 # 全UI要素を初期化し、メインイベントループを開始する
 def setup_ui():
@@ -190,15 +191,19 @@ def init_project_csv(genes, image_names):
         print("\033[93mprojectsディレクトリ内に画像が存在しないため、project_1.jpgとして保存します。\033[0m")   
     project_name = "project_" + str(last_project_number + 1) + ".csv"
 
+    # this_image_name は image_names からパスの形に修正して保存する（現在のディレクトリ/genereated_images/{image_name}）
+    GENERATE_PATH = "D:/downloads/develop/SD_IGA_system/generated_images"
+    image_paths = [os.path.normpath(os.path.join(GENERATE_PATH, image_name)) for image_name in image_names]
+
     # project_name で新規プロジェクトcsvを作成し、情報を保存する
     # id, generation, evaluation_score, this_image_name, init_image_name, image_strengs, seed, steps, prompt_length, cfg_scale, prompt
     # idは1から8までの連番、評価はこの段階では何も保存しない、世代は1である、init_image_nameはfirst_image_pathを加工して末尾を切り出す
-    init_image_name = str(first_image_path)
+    init_image_name = os.path.normpath(first_image_path)
     with open(os.path.join("projects", project_name), "w", newline='') as f:
         writer = csv.writer(f)
         writer.writerow(["id", "generation", "evaluation_score", "this_image_name", "init_image_name", "image_strengs", "seed", "steps", "prompt_length", "cfg_scale", "prompt"])
         for i, gene in enumerate(genes):
-            writer.writerow([i+1, 1, 0, image_names[i], init_image_name, gene.image_strengs, gene.seed, gene.steps, gene.prompt_length, gene.cfg_scale, gene.prompt])
+            writer.writerow([i+1, 1, 0, image_paths[i], str(init_image_name), gene.image_strengs, gene.seed, gene.steps, gene.prompt_length, gene.cfg_scale, gene.prompt])
 
 # 2週目以降の生成システムを開始する
 def iga_loop():
@@ -279,8 +284,9 @@ def get_last_generation_genes():
         last_line = len(lines) - 1
         # 最終行-7から最終行までの8行のデータを、Gene クラスに変換してリストに追加
         for line in lines[last_line-7:]:
+            init_image_path = os.path.normpath(line[4])
             gene = Gene(
-                init_image=Image.open(line[4]).convert("RGB"),
+                init_image=Image.open(os.path.normpath(line[4])).convert("RGB"),
                 image_strengs=float(line[5]),
                 seed=int(line[6]),
                 steps=int(line[7]),
@@ -288,7 +294,7 @@ def get_last_generation_genes():
                 cfg_scale=float(line[9]),
                 prompt=ast.literal_eval(line[10]),  # 文字列をリストに変換
                 evaluation_score=int(line[2]) if line[2] else 0,  # 空の場合はデフォルト値0を設定
-                init_image_name=line[4]
+                init_image_name=init_image_path
             )
             last_generation_genes.append(gene)
 

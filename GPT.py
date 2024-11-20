@@ -48,9 +48,27 @@ def create_base_gene_prompts_from_GPT(length_list, input_text):
 
     return prompt_list
 
-def mutate():
-    print("\033[92m遺伝子を変異させます\033[0m")
-    return
+def mutate(prompt, length):
+    print("\033[92m遺伝子を変異させるためにGPTにアクセスします\033[0m")
+    prompt = " ".join(prompt)
+
+    # GPTへのリクエスト
+    completion = openai.beta.chat.completions.parse(
+        model="gpt-4o-2024-08-06",
+        messages=[
+            # あなたはユーザーの入力を受け取って、その内容に関連しつつも、どの単語とも重複しない {length_list} 個の単語からなる画像生成AIのプロンプトを提案します。
+            {"role": "system", "content": f"You take the user's input and propose an image-generating AI prompt consisting of {str(length)} words that are relevant to the content but do not overlap with any words."},
+            {"role": "user", "content": prompt},
+        ],
+        response_format=response_format,
+    )
+    response = completion.choices[0].message
+
+    # レスポンスを確認
+    print(f"\033[92m提案されたレスポンスのプロンプト単語数: {len(response.parsed.prompt_words)}\033[0m")
+    print(f"\033[92m提案されたレスポンスのプロンプト単語: {response.parsed.prompt_words}\033[0m")
+
+    return response.parsed.prompt_words
 
 # UI経由でない直接呼出し用
 if __name__ == "__main__":
