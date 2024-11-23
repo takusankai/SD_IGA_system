@@ -1,4 +1,4 @@
-# UI.py の print メッセージは「黄色」で表示される
+# UI.py の print メッセージは「黄色」\033[93m で表示される
 import os
 import threading
 import queue
@@ -9,7 +9,8 @@ import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
 from dotenv import load_dotenv
-from IGA import create_base_genes, create_next_generation_genes
+from IGA import create_base_genes
+from IGA_modules.IGA_module_2 import create_next_generation_genes # ここを書き換える形で IGA のモジュールを変更する
 from GENE import Gene
 from SD import ImageGenerator
 
@@ -117,7 +118,7 @@ def clear_ui():
         widget.pack_forget()
 
 def upload_image():
-    global first_image, first_image_path
+    global first_image_path
     first_image_path = filedialog.askopenfilename(
         initialdir="D:\downloads\develop\SD_IGA_system\sample_images",
         filetypes=[("Image files", "*.jpg;*.jpeg;*.png")]
@@ -125,9 +126,10 @@ def upload_image():
     
     if first_image_path:
         first_image = Image.open(first_image_path)
-        first_image = first_image.resize((int(WINDOW_SIZE_HEIGHT * (600/1000)), int(WINDOW_SIZE_WIDTH * (600/1000))))
+        first_image = first_image.resize((int(WINDOW_SIZE_HEIGHT * (700/1000)), int(WINDOW_SIZE_WIDTH * (700/1000))))
         first_image = ImageTk.PhotoImage(first_image)
         first_image_label.config(image=first_image)
+        first_image_label.image = first_image
 
 def update_remaining_time(seconds):
     for remaining in range(seconds, -1, -1):
@@ -136,25 +138,23 @@ def update_remaining_time(seconds):
 
 # 初期UIから1週目の生成システムを開始する
 def first_iga_loop():
-    global first_image_path
-    # まず入力文章と画像を取得
+    # まず入力文章を取得
     input_text = input_field.get("1.0", "end-1c")
-    input_image = Image.open(first_image_path).convert("RGB")
 
     # 生成中UIを表示
     show_generate_UI()
     input_text_label.config(text=f"目標: {input_text}")
     generation_step_label.config(text=f"生成している世代は {generation} 世代目です")
-    remaining_time_label.config(text="およその残り時間: 40秒")
+    remaining_time_label.config(text="およその残り時間: 50秒")
 
     # 8つの初期遺伝子を作成し、表示する
-    genes = create_base_genes(input_text, input_image)
+    genes = create_base_genes(input_text, first_image_path)
     for i, gene in enumerate(genes):
         gene_data_label[i].config(text=str(gene))
         print(f"\033[93m遺伝子{i+1}の情報: {gene}\033[0m")
 
     # カウントダウンタイマースレッドを開始
-    threading.Thread(target=update_remaining_time, args=(40,)).start()
+    threading.Thread(target=update_remaining_time, args=(50,)).start()
     # 画像生成スレッドを開始
     threading.Thread(target=first_iga_loop_generate_thread, args=(genes,)).start()
 
@@ -162,11 +162,10 @@ def first_iga_loop():
 def first_iga_loop_generate_thread(genes):
     # 作成した遺伝子を元に画像生成を実行し、表示する
     base_generator = ImageGenerator()
-    base_images = base_generator.generate_images(genes)
+    base_images, image_paths = base_generator.generate_images(genes)
 
     # csv に遺伝子情報と生成画像情報を新規プロジェクトとして保存
-    image_names = base_generator.image_names
-    init_project_csv(genes, image_names)
+    init_project_csv(genes, image_paths)
 
     # 評価UIを呼び出し、生成画像を表示する
     show_evaluation_UI()
@@ -175,7 +174,7 @@ def first_iga_loop_generate_thread(genes):
         generated_image_label[i].config(image=image)
         generated_image_label[i].image = image
 
-def init_project_csv(genes, image_names):
+def init_project_csv(genes, image_paths):
     print("\033[93m新規プロジェクトを作成し、遺伝子情報と生成画像情報を保存します\033[0m")
     if not os.path.exists("projects"):
         os.makedirs("projects")
@@ -191,27 +190,24 @@ def init_project_csv(genes, image_names):
         print("\033[93mprojectsディレクトリ内に画像が存在しないため、project_1.jpgとして保存します。\033[0m")   
     project_name = "project_" + str(last_project_number + 1) + ".csv"
 
-    # this_image_name は image_names からパスの形に修正して保存する（現在のディレクトリ/genereated_images/{image_name}）
-    GENERATE_PATH = "D:/downloads/develop/SD_IGA_system/generated_images"
-    image_paths = [os.path.normpath(os.path.join(GENERATE_PATH, image_name)) for image_name in image_names]
-
     # project_name で新規プロジェクトcsvを作成し、情報を保存する
-    # id, generation, evaluation_score, this_image_name, init_image_name, image_strengs, seed, steps, prompt_length, cfg_scale, prompt
-    # idは1から8までの連番、評価はこの段階では何も保存しない、世代は1である、init_image_nameはfirst_image_pathを加工して末尾を切り出す
-    init_image_name = os.path.normpath(first_image_path)
+    # id, generation, evaluation_score, this_image_path, init_image_path, image_strengs, seed, steps, prompt_length, cfg_scale, prompt
+    # idは1から8までの連番、世代は1、評価点数は0、this_image_pathは空
     with open(os.path.join("projects", project_name), "w", newline='') as f:
         writer = csv.writer(f)
-        writer.writerow(["id", "generation", "evaluation_score", "this_image_name", "init_image_name", "image_strengs", "seed", "steps", "prompt_length", "cfg_scale", "prompt"])
+        writer.writerow(["id", "generation", "evaluation_score", "this_image_path", "init_image_path", "image_strengs", "seed", "steps", "prompt_length", "cfg_scale", "prompt"])
         for i, gene in enumerate(genes):
-            writer.writerow([i+1, 1, 0, image_paths[i], str(init_image_name), gene.image_strengs, gene.seed, gene.steps, gene.prompt_length, gene.cfg_scale, gene.prompt])
+            writer.writerow([i+1, 1, 0, image_paths[i], str(os.path.normpath(first_image_path)), gene.image_strengs, gene.seed, gene.steps, gene.prompt_length, gene.cfg_scale, gene.prompt])
 
 # 2週目以降の生成システムを開始する
 def iga_loop():
     global generation
     generation += 1
+
     # まず評価点数を取得
     evaluation_scores = [slider[i].get() for i in range(8)]
     print(f"\033[93m評価点数: {evaluation_scores}\033[0m")
+
     # csv に評価点数を保存
     project_files = os.listdir("projects")
     project_numbers = [int(f.split("_")[-1].split(".")[0]) for f in project_files if f.startswith("project_")]
@@ -232,16 +228,21 @@ def iga_loop():
     # 生成中UIを表示
     input_text = input_text_label.cget("text")
     show_generate_UI()
-    input_text_label.config(text=f"目標: {input_text}")
+    input_text_label.config(text=f"{input_text}")
     generation_step_label.config(text=f"生成している世代は {generation} 世代目です")
-    remaining_time_label.config(text="およその残り時間: 40秒")
+    remaining_time_label.config(text="およその残り時間: 50秒")
 
     # 前世代の遺伝子情報を取得し、次世代の遺伝子を生成
     before_genes = get_last_generation_genes()
     next_genes = create_next_generation_genes(before_genes)
 
+    # 生成した遺伝子情報を表示
+    for i, gene in enumerate(next_genes):
+        gene_data_label[i].config(text=str(gene))
+        print(f"\033[93m遺伝子{i+1}の情報: {gene}\033[0m")
+
     # カウントダウンタイマースレッドを開始
-    threading.Thread(target=update_remaining_time, args=(40,)).start()
+    threading.Thread(target=update_remaining_time, args=(50,)).start()
     # 画像生成スレッドを開始
     threading.Thread(target=iga_loop_generate_thread, args=(next_genes,)).start()
 
@@ -249,10 +250,9 @@ def iga_loop():
 def iga_loop_generate_thread(next_genes):
     # 遺伝子情報を元に画像生成を実行し、表示する
     next_generator = ImageGenerator()
-    next_images = next_generator.generate_images(next_genes)
+    next_images, image_paths = next_generator.generate_images(next_genes)
 
     # csv に遺伝子情報と生成画像情報を保存
-    image_names = next_generator.image_names
     project_files = os.listdir("projects")
     project_numbers = [int(f.split("_")[-1].split(".")[0]) for f in project_files if f.startswith("project_")]
     project_numbers.sort()
@@ -261,7 +261,7 @@ def iga_loop_generate_thread(next_genes):
     with open(os.path.join("projects", project_name), "a", newline='') as f:
         writer = csv.writer(f)
         for i, gene in enumerate(next_genes):
-            writer.writerow([generation * 8 - 7 + i, generation, 0, image_names[i], gene.init_image_name, gene.image_strengs, gene.seed, gene.steps, gene.prompt_length, gene.cfg_scale, gene.prompt])
+            writer.writerow([generation * 8 - 7 + i, generation, 0, image_paths[i], gene.init_image_path, gene.image_strengs, gene.seed, gene.steps, gene.prompt_length, gene.cfg_scale, gene.prompt])
 
     # 評価UIを呼び出し、生成画像を表示する
     show_evaluation_UI(end_flag=(generation >= end_loop_generation)) # end_loop_generation世代で終了処理に移行
@@ -277,24 +277,24 @@ def get_last_generation_genes():
     project_numbers.sort()
     project_name = "project_" + str(project_numbers[-1]) + ".csv"
     last_generation_genes = []
+    # csvを開き、最終行-7から最終行までの8行の遺伝子情報（評価とthis_image_pathも含む）を取得
     with open(os.path.join("projects", project_name), "r", newline='') as f:
         reader = csv.reader(f)
-        next(reader)  # ヘッダーをスキップ
+        next(reader) # ヘッダーをスキップ
         lines = list(reader)
         last_line = len(lines) - 1
         # 最終行-7から最終行までの8行のデータを、Gene クラスに変換してリストに追加
-        for line in lines[last_line-7:]:
-            init_image_path = os.path.normpath(line[4])
+        for line in lines[last_line-7:]: 
             gene = Gene(
-                init_image=Image.open(os.path.normpath(line[4])).convert("RGB"),
+                init_image_path=os.path.normpath(line[4]),
                 image_strengs=float(line[5]),
                 seed=int(line[6]),
                 steps=int(line[7]),
                 prompt_length=int(line[8]),
                 cfg_scale=float(line[9]),
-                prompt=ast.literal_eval(line[10]),  # 文字列をリストに変換
-                evaluation_score=int(line[2]) if line[2] else 0,  # 空の場合はデフォルト値0を設定
-                init_image_name=init_image_path
+                prompt=ast.literal_eval(line[10]), # 文字列をリストに変換
+                this_image_path=os.path.normpath(line[3]),
+                evaluation_score=int(line[2]) if line[2] else 1111 # エラー検証用の記録されないはずの値
             )
             last_generation_genes.append(gene)
 

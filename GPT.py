@@ -1,4 +1,4 @@
-# GPT.py の print メッセージは「緑色」で表示される
+# GPT.py の print メッセージは「緑色」\033[92m で表示される
 import os
 import openai
 import argparse
@@ -46,6 +46,7 @@ def create_base_gene_prompts_from_GPT(length_list, input_text):
         prompt = random.sample(response.parsed.prompt_words, length_list[i])
         prompt_list.append(prompt)
 
+    print(f"\033[92mプロンプトリスト: {prompt_list}\033[0m")
     return prompt_list
 
 def mutate(prompt, length):

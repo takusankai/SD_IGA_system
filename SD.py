@@ -1,4 +1,4 @@
-# SD.py の print メッセージは「青色」で表示される
+# SD.py の print メッセージは「青色」\033[94m で表示される
 import os
 import argparse
 import numpy as np
@@ -15,7 +15,6 @@ class ImageGenerator:
         self.height = height
         self.num_images = num_images
         self.device, self.dtype = self._get_device_and_dtype()
-        self.image_names = [] # 生成した画像のファイル名を格納し UI.py に返すためのリスト
 
     def _get_model_id(self):
         # .envファイルの読み込み
@@ -28,10 +27,10 @@ class ImageGenerator:
 
     def _get_device_and_dtype(self):
         if torch.cuda.is_available():
-            print("\033[93mCUDAが利用可能です。GPUを使用します。\033[0m")
+            print("\033[94mCUDAが利用可能です。GPUを使用します。\033[0m")
             return 'cuda', torch.float32
         else:
-            print("\033[93mCUDAが利用できません。CPUを使用します。\033[0m")
+            print("\033[94mCUDAが利用できません。CPUを使用します。\033[0m")
             return 'cpu', torch.float32
 
     def _save_image(self, image):
@@ -46,11 +45,20 @@ class ImageGenerator:
             last_image_number = image_numbers[-1]
         else:
             last_image_number = 0
-            print("\033[93mgenerated_imagesディレクトリ内に画像が存在しないため、generated_image_1.jpgとして保存します。\033[0m")
+            print("\033[94mgenerated_imagesディレクトリ内に画像が存在しないため、generated_image_1.jpgとして保存します。\033[0m")
 
         image_name = "generated_image_" + str(last_image_number + 1) + ".jpg"
         image.save(os.path.join("generated_images", image_name))
-        return image_name
+
+        # image_name を path にして返す
+        # .envファイルの読み込み
+        load_dotenv(dotenv_path='settings.env')
+        if not os.path.exists('settings.env'):
+            print('\033[94msettings.env の読み込みに失敗した為、UI 設定はデフォルト値を使用します\033[0m')
+        # 環境変数の取得(読み込めなければデフォルト値を使用)
+        GENERATE_PATH = str(os.getenv("GENERATE_PATH", "D:/downloads/develop/SD_IGA_system/generated_images"))
+        image_path = os.path.normpath(os.path.join(GENERATE_PATH, image_name))
+        return image_path
     
     def _load_pipeline(self, pipeline_class):
         pipe = pipeline_class.from_pretrained(
@@ -64,11 +72,11 @@ class ImageGenerator:
     def generate_images(self, genes):
         pipe = self._load_pipeline(StableDiffusionImg2ImgPipeline)
         images = []
+        image_paths = []
 
         for i, gene in enumerate(genes):
-            # init_image の型は PIL.Image.Image であるが、エラーの影響で numpy.ndarray に変換
-            gene.init_image = gene.init_image.resize((self.width, self.height))
-            gene.init_image = gene.init_image.convert("RGB")
+            init_image = Image.open(gene.init_image_path).resize((self.width, self.height))
+            init_image = init_image.convert("RGB")
 
             prompt = ", ".join(gene.prompt)
             generator = torch.Generator(device=self.device).manual_seed(gene.seed)
@@ -79,7 +87,7 @@ class ImageGenerator:
                 # Geneクラスのプロパティを使用
                 prompt,
                 guidance_scale = gene.cfg_scale,
-                image = gene.init_image,
+                image = init_image,
                 strength = gene.image_strengs,
                 generator = generator,
                 num_inference_steps = num_inference_steps,
@@ -89,11 +97,9 @@ class ImageGenerator:
                 height = self.height,
             ).images[0]
 
-            image_name = self._save_image(image)
-            self.image_names.append(image_name)
             images.append(image)
-            print(f"\033[94m{i+1}枚目の画像を生成しました: {image_name}\033[0m")
+            image_path = self._save_image(image)
+            image_paths.append(image_path)
+            print(f"\033[94m{i+1}枚目の画像を生成しました: {image_path}\033[0m")
         
-        return images
-
-
+        return images, image_paths
