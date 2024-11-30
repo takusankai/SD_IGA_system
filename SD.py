@@ -1,12 +1,9 @@
 # SD.py の print メッセージは「青色」\033[94m で表示される
 import os
-import argparse
-import numpy as np
 import torch
 from PIL import Image
-from diffusers import StableDiffusionImg2ImgPipeline
+from diffusers import StableDiffusionImg2ImgPipeline, StableDiffusionXLImg2ImgPipeline, AutoPipelineForImage2Image
 from dotenv import load_dotenv
-from GENE import Gene
 
 class ImageGenerator:
     def __init__(self, width=256, height=256, num_images=8):
@@ -28,7 +25,7 @@ class ImageGenerator:
     def _get_device_and_dtype(self):
         if torch.cuda.is_available():
             print("\033[94mCUDAが利用可能です。GPUを使用します。\033[0m")
-            return 'cuda', torch.float32
+            return 'cuda', torch.float16
         else:
             print("\033[94mCUDAが利用できません。CPUを使用します。\033[0m")
             return 'cpu', torch.float32
@@ -70,7 +67,7 @@ class ImageGenerator:
         return pipe
 
     def generate_images(self, genes):
-        pipe = self._load_pipeline(StableDiffusionImg2ImgPipeline)
+        pipe = self._load_pipeline(AutoPipelineForImage2Image)
         images = []
         image_paths = []
 
@@ -79,19 +76,29 @@ class ImageGenerator:
             init_image = init_image.convert("RGB")
 
             prompt = ", ".join(gene.prompt)
+            # 品質系ポジティブ・ネガティブプロンプトをハードコーディング
+            positive_prompt = "realistic, masterpiece, best quality, high quality, ultla detailed, high resolution, 8K, HD"
+            negative_prompt = "worst quality, low quality, blurry, low resolution, out of focus, ugly, bad, poor quality, artifact, jpeg artifacts, error, bloken"
+            
             generator = torch.Generator(device=self.device).manual_seed(gene.seed)
             # num_inference_steps * image_strengs = stepsとなるように調整
             num_inference_steps = int(gene.steps / gene.image_strengs) + 1
 
             image = pipe(
                 # Geneクラスのプロパティを使用
+                # prompt = prompt,
                 prompt,
-                guidance_scale = gene.cfg_scale,
+                # guidance_scale = gene.cfg_scale,
+                guidance_scale = 0.0,
                 image = init_image,
                 strength = gene.image_strengs,
                 generator = generator,
                 num_inference_steps = num_inference_steps,
                 
+                # ハードコーディング
+                # prompt_2 = positive_prompt,
+                # negative_prompt = negative_prompt,
+
                 # ImageGeneratorクラスのプロパティを使用
                 width = self.width, 
                 height = self.height,

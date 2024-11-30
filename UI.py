@@ -9,8 +9,7 @@ import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
 from dotenv import load_dotenv
-from IGA import create_base_genes
-from IGA_modules.IGA_module_2 import create_next_generation_genes # ここを書き換える形で IGA のモジュールを変更する
+from IGA_modules.IGA_module_2 import create_base_genes, create_next_generation_genes # ここを書き換える形で IGA のモジュールを変更する
 from GENE import Gene
 from SD import ImageGenerator
 
@@ -39,6 +38,7 @@ def setup_ui():
 
     # 入力フィールドを作成
     input_field = tk.Text(window, font=("Arial", FONT_SIZE), width=int(WINDOW_SIZE_WIDTH * (70/1000)), height=4, wrap=tk.WORD)
+    input_field.insert("1.0", "自然豊かで子供向けの遊具が充実した、落ち着く景色でありかつ子供たちが楽しめる公園の情景")
     # 生成システム開始ボタンを作成
     start_iga_loop_button = tk.Button(window, text="生成システムを開始", font=("Arial", FONT_SIZE), width=int(WINDOW_SIZE_WIDTH * (40/1000)), height=2, command=first_iga_loop)
     # 初期画像ラベルを作成
@@ -203,6 +203,7 @@ def init_project_csv(genes, image_paths):
 def iga_loop():
     global generation
     generation += 1
+    print(f"\033[93m{generation} 世代目の生成システムを開始します\033[0m")
 
     # まず評価点数を取得
     evaluation_scores = [slider[i].get() for i in range(8)]

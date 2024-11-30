@@ -2,7 +2,38 @@
 import random
 from PIL import Image
 from GENE import Gene
-from GPT import mutate
+from GPT import create_base_gene_prompts_from_GPT, mutate
+import os
+from dotenv import load_dotenv
+
+# 初期の8個の遺伝子の構築
+def create_base_genes(input_text, input_image_path):
+    print("\033[96m初期の8個の遺伝子を作成します\033[0m")
+
+    # setting.env から範囲変数を読み込む
+    image_strengs_min, image_strengs_max, seed_min, seed_max, steps_min, steps_max, prompt_length_min, prompt_length_max, cfg_scale_min, cfg_scale_max, _, _, _ = load_settings()
+   
+    genes = []
+    length_list = [random.randint(prompt_length_min, prompt_length_max) for _ in range(8)]
+    prompt_list = create_base_gene_prompts_from_GPT(length_list, input_text)
+    
+    for i in range(8):
+        # image_strengs は image_strengs_min から image_strengs_max の間でランダムに生成
+        image_strengs = round(random.uniform(image_strengs_min, image_strengs_max), 2)
+        # seed は seed_min から seed_max の間でランダムに生成
+        seed = random.randint(seed_min, seed_max)
+        # steps は steps_min から steps_max の間でランダムに生成
+        steps = random.randint(steps_min, steps_max)
+        # prompt_length は prompt_length_min から prompt_length_max の間でランダムに生成
+        prompt_length = length_list[i]
+        # cfg_scale は cfg_scale_min から cfg_scale_max の間でランダムに生成
+        cfg_scale = round(random.uniform(cfg_scale_min, cfg_scale_max), 1)
+        
+        gene = Gene(input_image_path, image_strengs, seed, steps, prompt_length, cfg_scale, prompt_list[i], "", 0)
+        genes.append(gene)
+
+    print(f"\033[96m初期の8個の遺伝子を作成しました\033[0m")
+    return genes
 
 def create_next_generation_genes(genes):
     print("\033[96m選択された遺伝的アルゴリズムは2番。基本的な方針による選択、交叉、突変を行います。\033[0m")
@@ -110,9 +141,12 @@ def create_next_generation_genes(genes):
         print(f"\033[96mnew_genes[{i}].prompt: {new_genes[i].prompt}\033[0m")
     
     print("") # for 抜けたので改行
+    
+    # setting.env から範囲変数と突然変異率を読み込む
+    image_strengs_min, image_strengs_max, seed_min, seed_max, steps_min, steps_max, prompt_length_min, prompt_length_max, cfg_scale_min, cfg_scale_max, image_mutate_rate, status_mutate_rate, prompt_mutate_rate = load_settings()
 
     # 突変
-    # [image 突変] 突然変異率： 0.3
+    # [image 突変] 突然変異率： image_mutate_rate
     # init_image は全parent_image_pairsとthis_imagesをまとめたリストからランダムに選択
     mutate_image_list = []
     for i in range(8):
@@ -122,51 +156,51 @@ def create_next_generation_genes(genes):
         mutate_image_list.append(parent_gene_pairs[i][1].this_image_path)
 
     for i in range(8):
-        if random.random() < 0.3:
+        if random.random() < image_mutate_rate:
             print(f"\033[96mgene[{i}]のinit_imageを{new_genes[i].init_image_path}から突然変異\033[0m")
             new_genes[i].init_image_path = random.choice(mutate_image_list)
             print(f"\033[96mnew_genes[{i}].init_image: {new_genes[i].init_image_path}\033[0m")
         
-    # image_strengs 突変は、0.3の確率で0.3から0.3の間でランダムに生成
+    # image_strengs 突変は、image_mutate_rate の確率で image_strengs_min から image_strengs_max の間でランダムに生成
     for i in range(8):
-        if random.random() < 0.3:
+        if random.random() < image_mutate_rate:
             print(f"\033[96mgene[{i}]のimage_strengsを{new_genes[i].image_strengs}から突然変異\033[0m")
-            new_genes[i].image_strengs = round(random.uniform(0.1, 0.3), 2)
+            new_genes[i].image_strengs = round(random.uniform(image_strengs_min, image_strengs_max), 2)
             print(f"\033[96mnew_genes[{i}].image_strengs: {new_genes[i].image_strengs}\033[0m")
     
     print("") # for 抜けたので改行
 
-    # [status 突変] 突然変異率： 0.3
-    # seed, steps は0から10000の間でランダムに生成、50から100の間でランダムに生成
+    # [status 突変] 突然変異率： status_mutate_rate
+    # seed, steps は seed_min から seed_max, steps_min から steps_max の間でランダムに生成
     for i in range(8):
-        if random.random() < 0.3:
+        if random.random() < status_mutate_rate:
             print(f"\033[96mgene[{i}]のseedを{new_genes[i].seed}から突然変異\033[0m")
-            new_genes[i].seed = random.randint(0, 10000)
+            new_genes[i].seed = random.randint(seed_min, seed_max)
             print(f"\033[96mnew_genes[{i}].seed: {new_genes[i].seed}\033[0m")
         
-        if random.random() < 0.3:
+        if random.random() < status_mutate_rate:
             print(f"\033[96mgene[{i}]のstepsを{new_genes[i].steps}から突然変異\033[0m")
-            new_genes[i].steps = random.randint(50, 100)
+            new_genes[i].steps = random.randint(steps_min, steps_max)
             print(f"\033[96mnew_genes[{i}].steps: {new_genes[i].steps}\033[0m")
     
     print("") # for 抜けたので改行
 
-    # [prompt 突変] 突然変異率： 0.3
-    # prompt_length は10から15の間でランダムに生成、cfg_scale は6.0から12.0の間でランダムに生成
+    # [prompt 突変] 突然変異率： prompt_mutate_rate
+    # prompt_length は prompt_length_min から prompt_length_max の間でランダムに生成, cfg_scale は cfg_scale_min から cfg_scale_max の間でランダムに生成
     for i in range(8):
-        if random.random() < 0.3:
+        if random.random() < prompt_mutate_rate:
             print(f"\033[96mgene[{i}]のprompt_lengthを{new_genes[i].prompt_length}から突然変異\033[0m")
-            new_genes[i].prompt_length = random.randint(10, 15)
+            new_genes[i].prompt_length = random.randint(prompt_length_min, prompt_length_max)
             print(f"\033[96mnew_genes[{i}].prompt_length: {new_genes[i].prompt_length}\033[0m")
         
         if random.random() < 0.3:
             print(f"\033[96mgene[{i}]のcfg_scaleを{new_genes[i].cfg_scale}から突然変異\033[0m")
-            new_genes[i].cfg_scale = round(random.uniform(6.0, 12.0), 1)
+            new_genes[i].cfg_scale = round(random.uniform(cfg_scale_min, cfg_scale_max), 1)
             print(f"\033[96mnew_genes[{i}].cfg_scale: {new_genes[i].cfg_scale}\033[0m")
     
     # prompt は GPT で置き換える
     for i in range(8):
-        if random.random() < 0.3:
+        if random.random() < prompt_mutate_rate:
             print(f"\033[96mgene[{i}]のpromptを{new_genes[i].prompt}（{new_genes[i].prompt_length}個）から突然変異\033[0m")
             new_genes[i].prompt = mutate(new_genes[i].prompt, new_genes[i].prompt_length)
             print(f"\033[96mnew_genes[{i}].prompt: {new_genes[i].prompt}\033[0m")
@@ -174,3 +208,25 @@ def create_next_generation_genes(genes):
     print("") # for 抜けたので改行
 
     return new_genes
+
+def load_settings():
+     # 範囲変数を setting.env から読み込む
+    load_dotenv(dotenv_path='settings.env')
+    if not os.path.exists('settings.env'):
+        print('\033[96msettings.env の読み込みに失敗した為、初期遺伝子の設定はデフォルト値を使用します\033[0m')
+    # 環境変数の取得(読み込めなければデフォルト値を使用)
+    image_strengs_min = float(os.getenv("IMAGE_STRENGS_MIN", 0.1))
+    image_strengs_max = float(os.getenv("IMAGE_STRENGS_MAX", 0.3))
+    seed_min = int(os.getenv("SEED_MIN", 0))
+    seed_max = int(os.getenv("SEED_MAX", 10000))
+    steps_min = int(os.getenv("STEPS_MIN", 1))
+    steps_max = int(os.getenv("STEPS_MAX", 4))
+    prompt_length_min = int(os.getenv("PROMPT_LENGTH_MIN", 10))
+    prompt_length_max = int(os.getenv("PROMPT_LENGTH_MAX", 20))
+    cfg_scale_min = float(os.getenv("CFG_SCALE_MIN", 6.0))
+    cfg_scale_max = float(os.getenv("CFG_SCALE_MAX", 20.0))
+    image_mutate_rate = float(os.getenv("IMAGE_MUTATE_RATE", 0.3))
+    status_mutate_rate = float(os.getenv("STATUS_MUTATE_RATE", 0.3))
+    prompt_mutate_rate = float(os.getenv("PROMPT_MUTATE_RATE", 0.3))
+
+    return image_strengs_min, image_strengs_max, seed_min, seed_max, steps_min, steps_max, prompt_length_min, prompt_length_max, cfg_scale_min, cfg_scale_max, image_mutate_rate, status_mutate_rate, prompt_mutate_rate

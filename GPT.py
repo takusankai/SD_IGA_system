@@ -38,7 +38,8 @@ def create_base_gene_prompts_from_GPT(length_list, input_text):
     response = completion.choices[0].message
 
     # レスポンスが何個のプロンプト単語を含むリストであるかを確認
-    print(f"\033[92mレスポンスのプロンプト単語数: {len(response.parsed.prompt_words)}\033[0m")    
+    print(f"\033[92mレスポンスのプロンプト単語数: {len(response.parsed.prompt_words)}\033[0m")
+    print(f"\033[92mレスポンスのプロンプト単語: {response.parsed.prompt_words}\033[0m")
 
     # 8個のプロンプトを作成し、リストに追加
     for i in range(8):
@@ -46,7 +47,6 @@ def create_base_gene_prompts_from_GPT(length_list, input_text):
         prompt = random.sample(response.parsed.prompt_words, length_list[i])
         prompt_list.append(prompt)
 
-    print(f"\033[92mプロンプトリスト: {prompt_list}\033[0m")
     return prompt_list
 
 def mutate(prompt, length):
@@ -75,13 +75,12 @@ def mutate(prompt, length):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--create", action="store_true")
+    parser.add_argument("--mutate", action="store_true")
     parser.add_argument("--input_text", type=str)
     parser.add_argument("--length_list", type=int, nargs="+")
-    parser.add_argument("--mutate", action="store_true")
-    # 後で作るparser.add_argument("--input_image", type=str)
-
+    
     args = parser.parse_args()
     if args.create:
         create_base_gene_prompts_from_GPT(args.length_list, args.input_text)
     if args.mutate:
-        mutate()
+        mutate(args.input_text, args.length_list)
