@@ -33,7 +33,7 @@ def create_base_genes(input_text, input_image_path):
         genes.append(gene)
 
     print(f"\033[96m初期の8個の遺伝子を作成しました\033[0m")
-    return genes
+    return genes, prompt_list
 
 def create_next_generation_genes(genes):
     print("\033[96m選択された遺伝的アルゴリズムは2番。基本的な方針による選択、交叉、突変を行います。\033[0m")

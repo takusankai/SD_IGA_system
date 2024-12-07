@@ -1,4 +1,4 @@
-# UI.py の print メッセージは「黄色」\033[93m で表示される
+# UI.py の print メッセージは「黄色」で表示される
 import os
 import threading
 import queue
@@ -29,10 +29,12 @@ result_queue = queue.Queue()
 generation = 1
 # ループ終了世代数を設定
 end_loop_generation = 10
+# お気に入りの状態を保持するリスト
+favorite_states = [False] * 8
 
 # 全UI要素を初期化し、メインイベントループを開始する
 def setup_ui():
-    global window, input_field, start_iga_loop_button, first_image_label, upload_button, input_text_label, explain_text_label, gene_data_frame, gene_data_label, generation_step_label, remaining_time_label, generated_image_frame, generated_image_label, slider, next_generation_button, result_queue, generation, end_message_label, exit_button
+    global window, input_field, start_iga_loop_button, first_image_label, upload_button, input_text_label, explain_text_label, gene_data_frame, gene_data_label, generation_step_label, remaining_time_label, generated_image_frame, generated_image_label, slider, favorite_buttons, next_generation_button, result_queue, generation, end_message_label, exit_button
     window = tk.Tk()
     window.geometry(f"{WINDOW_SIZE_HEIGHT}x{WINDOW_SIZE_WIDTH}")
 
@@ -61,6 +63,15 @@ def setup_ui():
     generated_image_label = [tk.Label(generated_image_frame, text=f"生成画像{i+1}", font=("Arial", FONT_SIZE), wraplength=int(WINDOW_SIZE_WIDTH * (200/1000))) for i in range(8)]
     # スライダーを作成
     slider = [tk.Scale(generated_image_frame, from_=0, to=100, orient=tk.HORIZONTAL, length=250) for _ in range(8)]
+    # お気に入りボタンを作成
+    favorite_buttons = [tk.Button(generated_image_frame, command=lambda i=i: toggle_favorite(i)) for i in range(8)]
+    # 星マークの画像を読み込む
+    before_star_image = ImageTk.PhotoImage(Image.open("before_star_image.png").resize((30, 30)))
+    after_star_image = ImageTk.PhotoImage(Image.open("after_star_image.png").resize((30, 30)))
+    for button in favorite_buttons:
+        button.config(image=before_star_image)
+        button.image_before = before_star_image
+        button.image_after = after_star_image
     # 次の世代へ進むボタンを作成
     next_generation_button = tk.Button(window, text="次の世代へ進む", font=("Arial", FONT_SIZE), width=int(WINDOW_SIZE_WIDTH * (40/1000)), height=2, command=iga_loop)
     # 終了メッセージラベルとシステム終了ボタンを作成
@@ -103,7 +114,10 @@ def show_evaluation_UI(end_flag=False):
     for i in range(8):
         generated_image_label[i].grid(row=(i//4), column=(i%4), padx=20, pady=20)
         slider[i].set(0)
-        slider[i].grid(row=(i//4)+2, column=(i%4), padx=20, pady=20)
+        slider[i].grid(row=(i//4)+2, column=(i%4), padx=5, pady=20, sticky="w")
+        favorite_states[i] = False
+        favorite_buttons[i].config(image=favorite_buttons[i].image_before)
+        favorite_buttons[i].grid(row=(i//4)+2, column=(i%4), padx=0, pady=20, sticky="e")
     
     if end_flag:
         explain_text_label.config(text="評価終了")
@@ -136,6 +150,13 @@ def update_remaining_time(seconds):
         remaining_time_label.config(text=f"およその残り時間: {remaining}秒")
         time.sleep(1)
 
+def toggle_favorite(i):
+    favorite_states[i] = not favorite_states[i]
+    if favorite_states[i]:
+        favorite_buttons[i].config(image=favorite_buttons[i].image_after)
+    else:
+        favorite_buttons[i].config(image=favorite_buttons[i].image_before)
+
 # 初期UIから1週目の生成システムを開始する
 def first_iga_loop():
     # まず入力文章を取得
@@ -148,10 +169,13 @@ def first_iga_loop():
     remaining_time_label.config(text="およその残り時間: 50秒")
 
     # 8つの初期遺伝子を作成し、表示する
-    genes = create_base_genes(input_text, first_image_path)
+    genes, prompt_list = create_base_genes(input_text, first_image_path)
     for i, gene in enumerate(genes):
         gene_data_label[i].config(text=str(gene))
         print(f"\033[93m遺伝子{i+1}の情報:\n{gene}\033[0m")
+    
+    # csv に prompt_list を新規辞書として保存
+    init_dictionary_csv(prompt_list)
 
     # カウントダウンタイマースレッドを開始
     threading.Thread(target=update_remaining_time, args=(50,)).start()
@@ -166,6 +190,8 @@ def first_iga_loop_generate_thread(genes):
 
     # csv に遺伝子情報と生成画像情報を新規プロジェクトとして保存
     init_project_csv(genes, image_paths)
+    # csv にお気に入り情報を保存できるように初期化
+    init_favorite_csv()
 
     # 評価UIを呼び出し、生成画像を表示する
     show_evaluation_UI()
@@ -199,6 +225,55 @@ def init_project_csv(genes, image_paths):
         for i, gene in enumerate(genes):
             writer.writerow([i+1, 1, 0, image_paths[i], str(os.path.normpath(first_image_path)), gene.image_strengs, gene.seed, gene.steps, gene.prompt_length, gene.cfg_scale, gene.prompt])
 
+def init_favorite_csv():
+    print("\033[93mお気に入り情報を保存するためのcsvを初期化します\033[0m")
+    if not os.path.exists("projects"):
+        os.makedirs("projects")
+        
+    favorite_files = os.listdir("projects")
+    favorite_numbers = [int(f.split("_")[-1].split(".")[0]) for f in favorite_files if f.startswith("favorite_")]
+    favorite_numbers.sort()
+
+    if favorite_numbers:
+        last_favorite_number = favorite_numbers[-1]
+    else:
+        last_favorite_number = 0
+        print("\033[93mprojectsディレクトリ内に画像が存在しないため、favorite_1.jpgとして保存します。\033[0m")   
+    favorite_name = "favorite_" + str(last_favorite_number + 1) + ".csv"
+
+    # favorite_name で新規お気に入りcsvを作成し、情報を保存する
+    # id, generation, favorite_image_path
+    # idは1から8までの連番、世代は1、お気に入りはFalse
+    with open(os.path.join("projects", favorite_name), "w", newline='') as f:
+        # ヘッダーのみのcsvを作成し初期化
+        writer = csv.writer(f)
+        writer.writerow(["id", "generation", "favorite_image_path"])
+
+def init_dictionary_csv(prompt_list):
+    print("\033[93mprompt_list を新規辞書として保存します\033[0m")
+    if not os.path.exists("projects"):
+        os.makedirs("projects")
+        
+    dictionary_files = os.listdir("projects")
+    dictionary_numbers = [int(f.split("_")[-1].split(".")[0]) for f in dictionary_files if f.startswith("dictionary_")]
+    dictionary_numbers.sort()
+
+    if dictionary_numbers:
+        last_dictionary_number = dictionary_numbers[-1]
+    else:
+        last_dictionary_number = 0
+        print("\033[93mprojectsディレクトリ内に画像が存在しないため、dictionary_1.jpgとして保存します。\033[0m")   
+    dictionary_name = "dictionary_" + str(last_dictionary_number + 1) + ".csv"
+
+    # dictionary_name で新規辞書csvを作成し、情報を保存する
+    # id, weight, prompt
+    # id は 1 から len(prompt_list) までの連番、weight は 0 で初期化、prompt は prompt_list の要素
+    with open(os.path.join("projects", dictionary_name), "w", newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["id", "weight", "prompt"])
+        for i, prompt in enumerate(prompt_list):
+            writer.writerow([i+1, 0, prompt])
+
 # 2週目以降の生成システムを開始する
 def iga_loop():
     global generation
@@ -208,23 +283,14 @@ def iga_loop():
     # まず評価点数を取得
     evaluation_scores = [slider[i].get() for i in range(8)]
     print(f"\033[93m評価点数: {evaluation_scores}\033[0m")
-
     # csv に評価点数を保存
-    project_files = os.listdir("projects")
-    project_numbers = [int(f.split("_")[-1].split(".")[0]) for f in project_files if f.startswith("project_")]
-    project_numbers.sort()
-    project_name = "project_" + str(project_numbers[-1]) + ".csv"
-    # csvを開き、最終行-7から最終行までの8行に評価点数を保存する
-    with open(os.path.join("projects", project_name), "r+", newline='') as f:
-        lines = f.readlines()
-        last_line = len(lines) - 1
-        for i in range(8):
-            line = lines[last_line-7+i].strip().split(",")
-            line[2] = str(evaluation_scores[i])  # 評価スコアを文字列に変換
-            lines[last_line-7+i] = ",".join(line) + "\n"
-        f.seek(0)
-        f.writelines(lines)
-        f.truncate()
+    save_evaluation_scores(evaluation_scores)
+
+    # 続いてお気に入りの画像を取得
+    is_favorite_images = [favorite_states[i] for i in range(8)]
+    print(f"\033[93mお気に入りの画像: {is_favorite_images}\033[0m")
+    # csv にお気に入り情報を保存
+    save_favorite_images(is_favorite_images)
 
     # 生成中UIを表示
     input_text = input_text_label.cget("text")
@@ -254,6 +320,70 @@ def iga_loop_generate_thread(next_genes):
     next_images, image_paths = next_generator.generate_images(next_genes)
 
     # csv に遺伝子情報と生成画像情報を保存
+    save_genes_and_images(next_genes, image_paths)
+    
+    # 評価UIを呼び出し、生成画像を表示する
+    show_evaluation_UI(end_flag=(generation >= end_loop_generation)) # end_loop_generation世代で終了処理に移行
+    for i, image in enumerate(next_images):
+        image = ImageTk.PhotoImage(image)
+        generated_image_label[i].config(image=image)
+        generated_image_label[i].image = image
+
+def save_evaluation_scores(evaluation_scores):
+    project_files = os.listdir("projects")
+    project_numbers = [int(f.split("_")[-1].split(".")[0]) for f in project_files if f.startswith("project_")]
+    project_numbers.sort()
+    project_name = "project_" + str(project_numbers[-1]) + ".csv"
+    # csvを開き、最終行-7から最終行までの8行に評価点数を保存する
+    with open(os.path.join("projects", project_name), "r+", newline='') as f:
+        lines = f.readlines()
+        last_line = len(lines) - 1
+        for i in range(8):
+            line = lines[last_line-7+i].strip().split(",")
+            line[2] = str(evaluation_scores[i])  # 評価スコアを文字列に変換
+            lines[last_line-7+i] = ",".join(line) + "\n"
+        f.seek(0)
+        f.writelines(lines)
+        f.truncate()
+
+def save_favorite_images(is_favorite_images):
+    # project_n.csv を開き、最終行-7から最終行までの8行のデータを取得し、this_generation_image_paths に保存
+    this_generation_image_paths = []
+
+    project_files = os.listdir("projects")
+    project_numbers = [int(f.split("_")[-1].split(".")[0]) for f in project_files if f.startswith("project_")]
+    project_numbers.sort()
+    project_name = "project_" + str(project_numbers[-1]) + ".csv"
+    with open(os.path.join("projects", project_name), "r", newline='') as f:
+        reader = csv.reader(f)
+        next(reader)
+        lines = list(reader)
+        last_line = len(lines) - 1
+        for line in lines[last_line-7:]:
+            this_generation_image_paths.append(line[3])
+
+    # favorite_n.csv を開き、is_favorite_images が True であるものに限定して、favorite_n.csv に generation と favorite_image_path を保存
+    # ID は favorite_n.csv の最終行の ID + 1 とする
+    favorite_files = os.listdir("projects")
+    favorite_numbers = [int(f.split("_")[-1].split(".")[0]) for f in favorite_files if f.startswith("favorite_")]
+    favorite_numbers.sort()
+    favorite_name = "favorite_" + str(favorite_numbers[-1]) + ".csv"
+    with open(os.path.join("projects", favorite_name), "a", newline='') as f:
+        writer = csv.writer(f)
+        for i, is_favorite in enumerate(is_favorite_images):
+            if is_favorite:
+                writer.writerow([len(favorite_numbers) * 8 + i + 1, generation, this_generation_image_paths[i]])
+    
+    # favorite_images ディレクトリにお気に入り画像を保存
+    if not os.path.exists("favorite_images"):
+        os.makedirs("favorite_images")
+    for i, is_favorite in enumerate(is_favorite_images):
+        if is_favorite:
+            image = Image.open(this_generation_image_paths[i])
+            # ファイル名は this_generation_image_path の末尾であるファイル名と一致させる
+            image.save(os.path.join("favorite_images", os.path.basename(this_generation_image_paths[i])))
+    
+def save_genes_and_images(next_genes, image_paths):
     project_files = os.listdir("projects")
     project_numbers = [int(f.split("_")[-1].split(".")[0]) for f in project_files if f.startswith("project_")]
     project_numbers.sort()
@@ -263,13 +393,6 @@ def iga_loop_generate_thread(next_genes):
         writer = csv.writer(f)
         for i, gene in enumerate(next_genes):
             writer.writerow([generation * 8 - 7 + i, generation, 0, image_paths[i], gene.init_image_path, gene.image_strengs, gene.seed, gene.steps, gene.prompt_length, gene.cfg_scale, gene.prompt])
-
-    # 評価UIを呼び出し、生成画像を表示する
-    show_evaluation_UI(end_flag=(generation >= end_loop_generation)) # end_loop_generation世代で終了処理に移行
-    for i, image in enumerate(next_images):
-        image = ImageTk.PhotoImage(image)
-        generated_image_label[i].config(image=image)
-        generated_image_label[i].image = image
 
 def get_last_generation_genes():
     # csv から前世代の遺伝子情報を取得
