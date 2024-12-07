@@ -29,8 +29,11 @@ def create_base_gene_prompts_from_GPT(length_list, input_text):
     completion = openai.beta.chat.completions.parse(
         model="gpt-4o-2024-08-06",
         messages=[
-            # あなたはユーザーの入力を受け取って、その内容に関連した {dictionary_size} 個の画像生成AIのプロンプトとなる {dictionary_language] の単語を提案します。
-            {"role": "system", "content": f"You take the user's input and suggest {dictionary_size} {dictionary_language} words that will prompt for the image-generating AI related to that content."},
+            # あなたはプロンプトエンジニアで、なるべく具体的な単語で構成される公園のデザインのための画像生成AIのプロンプトを提案します。
+            # あなたはユーザーの入力を受け取って、その内容に関連した画像を生成するために、画像生成AIのプロンプトとなる {dictionary_language} の1から4単語程度から構成される語句を {dictionary_size} 個提案します。
+            # "You take the user's input and suggest {dictionary_size} word or phrase, consisting of about 1 to 4 words in {dictionary_language}, that will prompt the image generation AI related to that content."
+            {"role": "system", "content": f"You are a prompt engineer and suggest prompts for an image generation AI for designing a park, consisting of specific words as much as possible."},
+            {"role": "system", "content": f"You take the user's input and suggest {dictionary_size} word or phrase, consisting of about 1 to 4 words in {dictionary_language}, that will prompt the image generation AI related to that content."},
             {"role": "user", "content": input_text},
         ],
         response_format=response_format,
@@ -57,8 +60,14 @@ def mutate(prompt, length):
     completion = openai.beta.chat.completions.parse(
         model="gpt-4o-2024-08-06",
         messages=[
-            # あなたはユーザーの入力を受け取って、その内容に関連しつつも、どの単語とも重複しない {length_list} 個の単語からなる画像生成AIのプロンプトを提案します。
-            {"role": "system", "content": f"You take the user's input and propose an image-generating AI prompt consisting of {str(length)} words that are relevant to the content but do not overlap with any words."},
+            # あなたはプロンプトエンジニアで、なるべく具体的な単語で構成される公園のデザインのための画像生成AIのプロンプトを提案します。
+            # 今回のデザイン目標は次の通りです: 滑り台、揺れる動物の遊具、ブランコなど、多くの遊具が設置された子供向けの公園
+            # あなたはユーザーの入力を受け取って、その内容に関連しつつも、どの単語とも重複しない1から4単語程度からなる語句からなる画像生成AIのプロンプトを {str(length)} 個提案します。
+            # "You take the user's input and suggest {str(length)} image-generating AI prompts consisting of about 1 to 4 words that are relevant to the content but do not overlap with any words."
+            # あなたはユーザーの入力を受け取って、そのフレーズを並び変えたり類義語に置き換えたりすることで、新しい1から4単語程度からなる語句を {str(length)} 個提案します。
+            {"role": "system", "content": f"You are a prompt engineer and suggest prompts for an image generation AI for designing a park, consisting of specific words as much as possible."},
+            {"role": "system", "content": f"The design goal this time is as follows: a children's park with many play equipment such as slides, rocking animal play equipment, and swings."},
+            {"role": "system", "content": f"You take the user's input and suggest {str(length)} new phrases consisting of about 1 to 4 words by reordering the phrases and replacing them with synonyms."},
             {"role": "user", "content": prompt},
         ],
         response_format=response_format,

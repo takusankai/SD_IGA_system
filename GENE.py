@@ -33,5 +33,5 @@ class Gene:
             f"生成ステップ数: {self.steps}\n"
             f"プロンプトの単語数: {self.prompt_length}\n"
             f"プロンプトの優先度: {self.cfg_scale}\n"
-            f"プロンプト:\n{translated_prompt}"
+            f"プロンプト:\n{translated_prompt}\n"
         )

@@ -9,7 +9,7 @@ import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
 from dotenv import load_dotenv
-from IGA_modules.IGA_module_2 import create_base_genes, create_next_generation_genes # ここを書き換える形で IGA のモジュールを変更する
+from IGA_modules.IGA_module_3 import create_base_genes, create_next_generation_genes # ここを書き換える形で IGA のモジュールを変更する
 from GENE import Gene
 from SD import ImageGenerator
 
@@ -38,7 +38,7 @@ def setup_ui():
 
     # 入力フィールドを作成
     input_field = tk.Text(window, font=("Arial", FONT_SIZE), width=int(WINDOW_SIZE_WIDTH * (70/1000)), height=4, wrap=tk.WORD)
-    input_field.insert("1.0", "自然豊かで子供向けの遊具が充実した、落ち着く景色でありかつ子供たちが楽しめる公園の情景")
+    input_field.insert("1.0", "滑り台、揺れる動物の遊具、ブランコなど、多くの遊具が設置された子供向けの公園")
     # 生成システム開始ボタンを作成
     start_iga_loop_button = tk.Button(window, text="生成システムを開始", font=("Arial", FONT_SIZE), width=int(WINDOW_SIZE_WIDTH * (40/1000)), height=2, command=first_iga_loop)
     # 初期画像ラベルを作成
@@ -151,7 +151,7 @@ def first_iga_loop():
     genes = create_base_genes(input_text, first_image_path)
     for i, gene in enumerate(genes):
         gene_data_label[i].config(text=str(gene))
-        print(f"\033[93m遺伝子{i+1}の情報: {gene}\033[0m")
+        print(f"\033[93m遺伝子{i+1}の情報:\n{gene}\033[0m")
 
     # カウントダウンタイマースレッドを開始
     threading.Thread(target=update_remaining_time, args=(50,)).start()
@@ -240,7 +240,7 @@ def iga_loop():
     # 生成した遺伝子情報を表示
     for i, gene in enumerate(next_genes):
         gene_data_label[i].config(text=str(gene))
-        print(f"\033[93m遺伝子{i+1}の情報: {gene}\033[0m")
+        print(f"\033[93m遺伝子{i+1}の情報:\n{gene}\033[0m")
 
     # カウントダウンタイマースレッドを開始
     threading.Thread(target=update_remaining_time, args=(50,)).start()

@@ -2,7 +2,7 @@
 import os
 import torch
 from PIL import Image
-from diffusers import StableDiffusionImg2ImgPipeline, StableDiffusionXLImg2ImgPipeline, AutoPipelineForImage2Image
+from diffusers import StableDiffusionImg2ImgPipeline, StableDiffusionXLImg2ImgPipeline, AutoPipelineForImage2Image, StableDiffusionXLControlNetPipeline, ControlNetModel
 from dotenv import load_dotenv
 
 class ImageGenerator:
@@ -58,6 +58,7 @@ class ImageGenerator:
         return image_path
     
     def _load_pipeline(self, pipeline_class):
+
         pipe = pipeline_class.from_pretrained(
             self.model_id, 
             torch_dtype=self.dtype,
@@ -84,7 +85,7 @@ class ImageGenerator:
             # num_inference_steps * image_strengs = stepsとなるように調整
             num_inference_steps = int(gene.steps / gene.image_strengs) + 1
 
-            image = pipe(
+            result = pipe(
                 # Geneクラスのプロパティを使用
                 # prompt = prompt,
                 prompt,
@@ -94,6 +95,7 @@ class ImageGenerator:
                 strength = gene.image_strengs,
                 generator = generator,
                 num_inference_steps = num_inference_steps,
+                # num_inference_steps = 4.0,
                 
                 # ハードコーディング
                 # prompt_2 = positive_prompt,
@@ -102,8 +104,12 @@ class ImageGenerator:
                 # ImageGeneratorクラスのプロパティを使用
                 width = self.width, 
                 height = self.height,
-            ).images[0]
 
+                # コントロールネット用
+                # controlnet_conditioning_scale=0.5,
+            )
+
+            image = result.images[0]
             images.append(image)
             image_path = self._save_image(image)
             image_paths.append(image_path)

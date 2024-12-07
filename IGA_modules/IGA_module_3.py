@@ -1,4 +1,4 @@
-# IGA_module_2.py の print メッセージは「シアン」\033[96m で表示される
+# IGA_module_3.py の print メッセージは「シアン」\033[96m で表示される
 import random
 from PIL import Image
 from GENE import Gene
@@ -36,8 +36,8 @@ def create_base_genes(input_text, input_image_path):
     return genes
 
 def create_next_generation_genes(genes):
-    print("\033[96m選択された遺伝的アルゴリズムは2番。基本的な方針による選択、交叉、突変を行います。\033[0m")
-    print("\033[96m全8個体を交叉によって生成し、それに突然変異を加えるという実装上楽なアルゴリズムを採用している点に注意が必要です。\033[0m")
+    print("\033[96m選択された遺伝的アルゴリズムは3番。画像 this を交叉対象に含めず、かつ strengs を下げることで変更性の向上を図ります\033[0m")
+    print("\033[96mまた、失われると考えられる制御性は SD.py 側の LoRA, ControlNet、マスク画像にて対応します\033[0m")
 
     # 次の遺伝子となる8個のgene型のリストを宣言
     new_genes = []
@@ -63,14 +63,14 @@ def create_next_generation_genes(genes):
 
     # 交叉
     # [image 交叉]
-    # 両親の init_image 又は、両親の this_image という計4枚の画像から1枚の画像を選択していく
+    # 両親の init_image から1枚の画像を選択していく
     for i in range(8):
         # 両親の画像をランダムに選択
         image_paths = [
             parent_gene_pairs[i][0].init_image_path,  # 1
             parent_gene_pairs[i][1].init_image_path,  # 2
-            parent_gene_pairs[i][0].this_image_path,  # 3
-            parent_gene_pairs[i][1].this_image_path   # 4
+            # parent_gene_pairs[i][0].this_image_path,  # 3
+            # parent_gene_pairs[i][1].this_image_path   # 4
         ]
         # 画像をランダムに選択
         choiced_image_path = random.choice(image_paths)
@@ -116,19 +116,25 @@ def create_next_generation_genes(genes):
 
         # 両親のpromptから優先度順にリストにまとめる
         prompt_list = []
-        # 両親のpromptで一致した単語があれば、そのインデックスの平均を取って優先度とし、（優先度, 単語）のタプルの形でリストに追加
+        # 両親のpromptで一致した単語があれば、そのインデックスの数値間のランダムな数値を取って、その数値と単語を足して優先度とし、（優先度, 単語）のタプルの形でリストに追加
         for word in parent_gene_pairs[i][0].prompt:
             if word in parent_gene_pairs[i][1].prompt:
-                index = parent_gene_pairs[i][1].prompt.index(word)
-                priority = (index + parent_gene_pairs[i][0].prompt.index(word)) / 2
+                priority = random.uniform(parent_gene_pairs[i][0].prompt.index(word), parent_gene_pairs[i][1].prompt.index(word))
                 prompt_list.append((priority, word))
 
-        # 両親のpromptで一致しない単語は、そのインデックスとその単語がある方のprompt_lengthの平均を取って優先度とし、（優先度, 単語）のタプルの形でリストに追加
+                # index = parent_gene_pairs[i][1].prompt.index(word)
+                # priority = (index + parent_gene_pairs[i][0].prompt.index(word)) / 2
+                # prompt_list.append((priority, word))
+
+        # 両親のpromptで一致しない単語は、そのインデックスとその単語がある方のprompt_lengthの数値間のランダムな数値を取って、その数値と単語を足して優先度とし、（優先度, 単語）のタプルの形でリストに追加
         for word in parent_gene_pairs[i][0].prompt:
             if word not in parent_gene_pairs[i][1].prompt:
-                index = parent_gene_pairs[i][0].prompt.index(word)
-                priority = (index + parent_gene_pairs[i][0].prompt_length) / 2
+                priority = random.uniform(parent_gene_pairs[i][0].prompt.index(word), parent_gene_pairs[i][0].prompt_length)
                 prompt_list.append((priority, word))
+
+                # index = parent_gene_pairs[i][0].prompt.index(word)
+                # priority = (index + parent_gene_pairs[i][0].prompt_length) / 2
+                # prompt_list.append((priority, word))
         
         for word in parent_gene_pairs[i][1].prompt:
             if word not in parent_gene_pairs[i][0].prompt:
@@ -138,9 +144,9 @@ def create_next_generation_genes(genes):
 
         # 優先度順にソート
         prompt_list.sort(key=lambda x: x[0])
+        print(f"\033[96mnew_genes[{i}]のprompt_list: {prompt_list}\033[0m")
         # 上位のprompt_length個を選択
         new_genes[i].prompt = [word for _, word in prompt_list[:new_genes[i].prompt_length]]
-        print(f"\033[96mnew_genes[{i}].prompt: {new_genes[i].prompt}\033[0m")
     
     print("") # for 抜けたので改行
     
@@ -149,13 +155,11 @@ def create_next_generation_genes(genes):
 
     # 突変
     # [image 突変] 突然変異率： image_mutate_rate
-    # init_image は全parent_image_pairsとthis_imagesをまとめたリストからランダムに選択
+    # init_image は全 parent_image_pairs をまとめたリストからランダムに選択
     mutate_image_list = []
     for i in range(8):
         mutate_image_list.append(parent_gene_pairs[i][0].init_image_path)
         mutate_image_list.append(parent_gene_pairs[i][1].init_image_path)
-        mutate_image_list.append(parent_gene_pairs[i][0].this_image_path)
-        mutate_image_list.append(parent_gene_pairs[i][1].this_image_path)
 
     for i in range(8):
         if random.random() < image_mutate_rate:
@@ -218,7 +222,7 @@ def load_settings():
         print('\033[96msettings.env の読み込みに失敗した為、初期遺伝子の設定はデフォルト値を使用します\033[0m')
     # 環境変数の取得(読み込めなければデフォルト値を使用)
     image_strengs_min = float(os.getenv("IMAGE_STRENGS_MIN", 0.1))
-    image_strengs_max = float(os.getenv("IMAGE_STRENGS_MAX", 0.3))
+    image_strengs_max = float(os.getenv("IMAGE_STRENGS_MAX", 0.6))
     seed_min = int(os.getenv("SEED_MIN", 0))
     seed_max = int(os.getenv("SEED_MAX", 10000))
     steps_min = int(os.getenv("STEPS_MIN", 1))
