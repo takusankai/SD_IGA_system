@@ -7,7 +7,7 @@ import os
 from dotenv import load_dotenv
 
 # 初期の8個の遺伝子の構築
-def create_base_genes(input_text, input_image_path):
+def create_base_genes(input_text, input_image_path=None):
     print("\033[96m初期の8個の遺伝子を作成します\033[0m")
 
     # setting.env から範囲変数を読み込む
@@ -29,7 +29,10 @@ def create_base_genes(input_text, input_image_path):
         # cfg_scale は cfg_scale_min から cfg_scale_max の間でランダムに生成
         cfg_scale = round(random.uniform(cfg_scale_min, cfg_scale_max), 1)
         
-        gene = Gene(input_image_path, image_strengs, seed, steps, prompt_length, cfg_scale, prompt_list[i], "", 0)
+        if input_image_path == None:
+            gene = Gene("", image_strengs, seed, steps, prompt_length, cfg_scale, prompt_list[i], "", 0)
+        else:
+            gene = Gene(input_image_path, image_strengs, seed, steps, prompt_length, cfg_scale, prompt_list[i], "", 0)
         genes.append(gene)
 
     print(f"\033[96m初期の8個の遺伝子を作成しました\033[0m")
@@ -65,29 +68,34 @@ def create_next_generation_genes(genes):
     # [image 交叉]
     # 両親の init_image から1枚の画像を選択していく
     for i in range(8):
-        # 両親の画像をランダムに選択
-        image_paths = [
-            parent_gene_pairs[i][0].init_image_path,  # 1
-            parent_gene_pairs[i][1].init_image_path,  # 2
-            # parent_gene_pairs[i][0].this_image_path,  # 3
-            # parent_gene_pairs[i][1].this_image_path   # 4
-        ]
-        # 画像をランダムに選択
-        choiced_image_path = random.choice(image_paths)
-        new_genes[i].init_image_path = choiced_image_path
+        # 両親の init_image がどちらも空でない場合のみ init_image 交叉を行う
+        if parent_gene_pairs[i][0].init_image_path != "" and parent_gene_pairs[i][1].init_image_path != "":
+            # 両親の画像をランダムに選択
+            image_paths = [
+                parent_gene_pairs[i][0].init_image_path,  # 1
+                parent_gene_pairs[i][1].init_image_path,  # 2
+                # parent_gene_pairs[i][0].this_image_path,  # 3
+                # parent_gene_pairs[i][1].this_image_path   # 4
+            ]
+            # 画像をランダムに選択
+            choiced_image_path = random.choice(image_paths)
+            new_genes[i].init_image_path = choiced_image_path
 
-        # 選択された画像を識別するためのインデックスを取得
-        choiced_image_index = image_paths.index(choiced_image_path) + 1
+            # 選択された画像を識別するためのインデックスを取得
+            choiced_image_index = image_paths.index(choiced_image_path) + 1
 
-        # 選択された画像を識別するためのメッセージを表示
-        if choiced_image_index == 1:
-            print(f"\033[96m選択された画像: 1 (parent_gene_pairs[{i}][0].init_image_path)\033[0m")
-        elif choiced_image_index == 2:
-            print(f"\033[96m選択された画像: 2 (parent_gene_pairs[{i}][1].init_image_path)\033[0m")
-        elif choiced_image_index == 3:
-            print(f"\033[96m選択された画像: 3 (parent_gene_pairs[{i}][0].this_image_path)\033[0m")
-        elif choiced_image_index == 4:
-            print(f"\033[96m選択された画像: 4 (parent_gene_pairs[{i}][1].this_image_path)\033[0m")
+            # 選択された画像を識別するためのメッセージを表示
+            if choiced_image_index == 1:
+                print(f"\033[96m選択された画像: 1 (parent_gene_pairs[{i}][0].init_image_path)\033[0m")
+            elif choiced_image_index == 2:
+                print(f"\033[96m選択された画像: 2 (parent_gene_pairs[{i}][1].init_image_path)\033[0m")
+            elif choiced_image_index == 3:
+                print(f"\033[96m選択された画像: 3 (parent_gene_pairs[{i}][0].this_image_path)\033[0m")
+            elif choiced_image_index == 4:
+                print(f"\033[96m選択された画像: 4 (parent_gene_pairs[{i}][1].this_image_path)\033[0m")
+        else:
+            # 両親の init_image がどちらも空の場合は、子も空とする
+            new_genes[i].init_image_path = ""
             
         # image_strengs の交叉は両親のどちらかの値をランダムに選択
         new_genes[i].image_strengs = random.choice([parent_gene_pairs[i][0].image_strengs, parent_gene_pairs[i][1].image_strengs])
@@ -156,17 +164,19 @@ def create_next_generation_genes(genes):
     # 突変
     # [image 突変] 突然変異率： image_mutate_rate
     # init_image は全 parent_image_pairs をまとめたリストからランダムに選択
-    mutate_image_list = []
-    for i in range(8):
-        mutate_image_list.append(parent_gene_pairs[i][0].init_image_path)
-        mutate_image_list.append(parent_gene_pairs[i][1].init_image_path)
+    # 突然変異対象の init_image が空でない場合のみ突然変異を行う
+    if parent_gene_pairs[i][0].init_image_path != "" and parent_gene_pairs[i][1].init_image_path != "":
+        mutate_image_list = []
+        for i in range(8):
+            mutate_image_list.append(parent_gene_pairs[i][0].init_image_path)
+            mutate_image_list.append(parent_gene_pairs[i][1].init_image_path)
 
-    for i in range(8):
-        if random.random() < image_mutate_rate:
-            print(f"\033[96mgene[{i}]のinit_imageを{new_genes[i].init_image_path}から突然変異\033[0m")
-            new_genes[i].init_image_path = random.choice(mutate_image_list)
-            print(f"\033[96mnew_genes[{i}].init_image: {new_genes[i].init_image_path}\033[0m")
-        
+        for i in range(8):
+            if random.random() < image_mutate_rate:
+                print(f"\033[96mgene[{i}]のinit_imageを{new_genes[i].init_image_path}から突然変異\033[0m")
+                new_genes[i].init_image_path = random.choice(mutate_image_list)
+                print(f"\033[96mnew_genes[{i}].init_image: {new_genes[i].init_image_path}\033[0m")
+
     # image_strengs 突変は、image_mutate_rate の確率で image_strengs_min から image_strengs_max の間でランダムに生成
     for i in range(8):
         if random.random() < image_mutate_rate:

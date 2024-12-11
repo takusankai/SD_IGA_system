@@ -1,9 +1,27 @@
 プロンプト等の記録用のメモ
 
+[I2I 公園デザインタスク サンプルプロンプト]
 自然豊かで子供向けの遊具が充実した、落ち着く景色でありかつ子供たちが楽しめる公園の情景
 ↓　長いし遊具ができない
 様々な子供向け遊具が設置された自然豊かで楽しい公園の情景
 ↓　なんの遊具を置いて欲しいかくらい書くべき、解像度不足過ぎて試し甲斐がない
 滑り台、揺れる動物の遊具、ブランコなどの遊具が多く設置された楽しい子供向けの公園
 
+[I2I 都市デザインタスク サンプルプロンプト]
+サイバーパンクのテイストを持ちながらも、現実的で実現可能な近未来の都市風景
+
+[I2I インテリアデザインタスク サンプルプロンプト]
+ベット、デスク、テーブルなどの家具を青色を基調に統一した、一人暮らし部屋のインテリアデザイン
+
+[I2I 服飾デザインタスク サンプルプロンプト]
+インフルエンサーらしい奇抜で象徴的なコーディネートデザイン
+
+[T2I 俳句の情景画像生成タスク サンプルプロンプト]
+松尾芭蕉の「古池や　岩に染み入る　蝉の音」という俳句から想起される情景
+
+[T2I ゆるキャラデザインタスク サンプルプロンプト]
+国指定重要文化財の「木造狛犬」、市の木「けやき」、市の花「梅」、市の鳥「ひばり」を含めた市のゆるキャラのデザイン
+
+[品質系プロンプト]
+positive_prompt = "realistic, masterpiece, best quality, high quality, ultla detailed, high resolution, 8K, HD"
 negative_prompt = "worst quality, low quality, medium quality, deleted, lowres, comic, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, watermark, username, blurry"

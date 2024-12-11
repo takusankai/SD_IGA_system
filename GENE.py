@@ -27,11 +27,11 @@ class Gene:
         translated_prompt = translator.translate(prompt)
 
         return (
-            f"参考画像の名前: {init_image_name}\n"
+            # f"参考画像の名前: {init_image_name}\n"
             f"参考画像の優先度: {self.image_strengs}\n"
             f"シード値（乱数）: {self.seed}\n"
-            f"生成ステップ数: {self.steps}\n"
-            f"プロンプトの単語数: {self.prompt_length}\n"
-            f"プロンプトの優先度: {self.cfg_scale}\n"
+            # f"生成ステップ数: {self.steps}\n"
+            # f"プロンプトの単語数: {self.prompt_length}\n"
+            # f"プロンプトの優先度: {self.cfg_scale}\n"
             f"プロンプト:\n{translated_prompt}\n"
         )
