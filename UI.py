@@ -26,6 +26,8 @@ FONT_SIZE = int(os.getenv("FONT_SIZE", 16))
 # グローバル変数の宣言
 # 現在の生成ステップ数を保持
 generation = 1
+# 初期画像のパスを保持
+first_image_path = ""
 # 評価UIにて、お気に入りの状態を保持するリスト
 favorite_states = [False] * 8
 # 評価UIにて、遺伝子情報の表示/非表示の状態を保持する変数
@@ -260,7 +262,11 @@ def first_iga_loop():
 def first_iga_loop_generate_thread(genes):
     # 作成した遺伝子を元に画像生成を実行し、表示する
     base_generator = ImageGenerator()
-    base_images, image_paths = base_generator.generate_images(genes)
+    # first_image_path が存在する/しないで分岐
+    if first_image_path:
+        base_images, image_paths = base_generator.i2i_generate_images(genes, first_image_path)
+    else:
+        base_images, image_paths = base_generator.t2i_generate_images(genes)
 
     # csv に遺伝子情報と生成画像情報を新規プロジェクトとして保存
     init_project_csv(genes, image_paths, first_image_path)

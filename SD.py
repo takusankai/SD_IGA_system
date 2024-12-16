@@ -2,7 +2,7 @@
 import os
 import torch
 from PIL import Image
-from diffusers import StableDiffusionImg2ImgPipeline, StableDiffusionXLImg2ImgPipeline, AutoPipelineForImage2Image, StableDiffusionXLControlNetPipeline, ControlNetModel
+from diffusers import StableDiffusionImg2ImgPipeline, StableDiffusionXLImg2ImgPipeline, AutoPipelineForImage2Image, AutoPipelineForText2Image, StableDiffusionXLControlNetPipeline, ControlNetModel
 from dotenv import load_dotenv
 
 class ImageGenerator:
@@ -67,13 +67,13 @@ class ImageGenerator:
 
         return pipe
 
-    def generate_images(self, genes):
+    def i2i_generate_images(self, genes, first_image_path):
         pipe = self._load_pipeline(AutoPipelineForImage2Image)
         images = []
         image_paths = []
 
         for i, gene in enumerate(genes):
-            init_image = Image.open(gene.init_image_path).resize((self.width, self.height))
+            init_image = Image.open(first_image_path).resize((self.width, self.height))
             init_image = init_image.convert("RGB")
 
             prompt = ", ".join(gene.prompt)
@@ -94,8 +94,8 @@ class ImageGenerator:
                 image = init_image,
                 strength = gene.image_strengs,
                 generator = generator,
-                num_inference_steps = num_inference_steps,
-                # num_inference_steps = 4.0,
+                # num_inference_steps = num_inference_steps,
+                num_inference_steps = 4.0,
                 
                 # ハードコーディング
                 # prompt_2 = positive_prompt,
@@ -104,9 +104,48 @@ class ImageGenerator:
                 # ImageGeneratorクラスのプロパティを使用
                 width = self.width, 
                 height = self.height,
+            )
 
-                # コントロールネット用
-                # controlnet_conditioning_scale=0.5,
+            image = result.images[0]
+            images.append(image)
+            image_path = self._save_image(image)
+            image_paths.append(image_path)
+            print(f"\033[94m{i+1}枚目の画像を生成しました: {image_path}\033[0m")
+        
+        return images, image_paths
+    
+    def t2i_generate_images(self, genes):
+        pipe = self._load_pipeline(AutoPipelineForText2Image)
+        images = []
+        image_paths = []
+
+        for i, gene in enumerate(genes):
+            prompt = ", ".join(gene.prompt)
+            # 品質系ポジティブ・ネガティブプロンプトをハードコーディング
+            positive_prompt = "realistic, masterpiece, best quality, high quality, ultla detailed, high resolution, 8K, HD"
+            negative_prompt = "worst quality, low quality, blurry, low resolution, out of focus, ugly, bad, poor quality, artifact, jpeg artifacts, error, bloken"
+            
+            generator = torch.Generator(device=self.device).manual_seed(gene.seed)
+            # num_inference_steps * image_strengs = stepsとなるように調整
+            num_inference_steps = int(gene.steps / gene.image_strengs) + 1
+
+            result = pipe(
+                # Geneクラスのプロパティを使用
+                # prompt = prompt,
+                prompt,
+                # guidance_scale = gene.cfg_scale,
+                guidance_scale = 0.0,
+                generator = generator,
+                # num_inference_steps = num_inference_steps,
+                num_inference_steps = 4.0,
+                
+                # ハードコーディング
+                # prompt_2 = positive_prompt,
+                # negative_prompt = negative_prompt,
+
+                # ImageGeneratorクラスのプロパティを使用
+                width = self.width, 
+                height = self.height,
             )
 
             image = result.images[0]
