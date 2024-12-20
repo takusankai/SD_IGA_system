@@ -1,17 +1,14 @@
 # UI.py の print メッセージは「黄色」で表示される
 import os
 import threading
-import queue
 import time
 import csv
-import ast
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
 from dotenv import load_dotenv
-from IGA_modules.IGA_module_3 import create_base_genes, create_next_generation_genes # ここを書き換える形で IGA のモジュールを変更する
+from IGA_modules.IGA_module_4 import create_base_genes, create_next_generation_genes # ここを書き換える形で IGA のモジュールを変更する
 from CSV import * # CSV.py の全ての関数をインポート
-from GENE import Gene
 from SD import ImageGenerator
 
 # .envファイルの読み込み
@@ -35,7 +32,7 @@ show_gene_status = False
 
 # 全UI要素を初期化し、メインイベントループを開始する
 def setup_ui():
-    global window, canvas, scrollbar, scrollable_frame, input_field, start_iga_loop_button, first_image_label, upload_button, input_text_label, explain_text_label, gene_data_frame, gene_data_label, generation_step_label, remaining_time_label, generated_image_frame, generated_image_label, slider, favorite_buttons, before_star_image, after_star_image, next_generation_button, end_loop_button, show_gene_switch, favorite_images_frame, end_message_label, exit_button
+    global window, canvas, scrollbar, scrollable_frame, input_field, start_iga_loop_button, first_image_label, upload_button, input_text_label, explain_text_label, gene_data_frame, gene_data_label, generation_step_label, remaining_time_label, generated_image_frame, generated_image_label, sliders, favorite_buttons, before_star_image, after_star_image, next_generation_button, end_loop_button, show_gene_switch, favorite_images_frame, end_message_label, exit_button
     window = tk.Tk()
     window.geometry(f"{WINDOW_SIZE_HEIGHT}x{WINDOW_SIZE_WIDTH}")
 
@@ -82,7 +79,9 @@ def setup_ui():
     generated_image_frame = tk.Frame(scrollable_frame)
     generated_image_label = [tk.Label(generated_image_frame, text=f"生成画像{i+1}", font=("Arial", FONT_SIZE), wraplength=int(WINDOW_SIZE_WIDTH * (200/1000))) for i in range(8)]
     # スライダーを作成
-    slider = [tk.Scale(generated_image_frame, from_=0, to=100, orient=tk.HORIZONTAL, length=250) for _ in range(8)]
+    sliders = [tk.Scale(generated_image_frame, from_=0, to=100, orient=tk.HORIZONTAL, length=250) for _ in range(8)]
+    for slider in sliders:
+        slider.set(50) # 初期値を50に設定
     # お気に入りボタンを作成
     favorite_buttons = [tk.Button(generated_image_frame, command=lambda i=i: toggle_favorite(i)) for i in range(8)]
     # 星マークの画像を読み込む
@@ -140,8 +139,8 @@ def show_evaluation_UI(redraw=False):
     generated_image_frame.pack(pady=10)
     for i in range(8):
         generated_image_label[i].grid(row=(i//4), column=(i%4), padx=20, pady=20)
-        if not redraw: slider[i].set(0) # 表示/非表示の切り替え時はスライダーの値をリセットしない
-        slider[i].grid(row=(i//4)+2, column=(i%4), padx=5, pady=20, sticky="w")
+        if not redraw: sliders[i].set(50) # 表示/非表示の切り替え時はスライダーの値をリセットしない
+        sliders[i].grid(row=(i//4)+2, column=(i%4), padx=5, pady=20, sticky="w")
         favorite_states[i] = False
         favorite_buttons[i].config(image=favorite_buttons[i].image_before)
         favorite_buttons[i].grid(row=(i//4)+2, column=(i%4), padx=0, pady=20, sticky="e")
@@ -230,28 +229,21 @@ def first_iga_loop():
     # まず入力文章を取得
     input_text = input_field.get("1.0", "end-1c")
 
-    # 画像がアップロードされているか確認し、is_uploaded を True か False に設定
-    is_uploaded = True if first_image_path else False
-
     # 生成中UIを表示
     show_generate_UI()
     input_text_label.config(text=f"目標: {input_text}")
     generation_step_label.config(text=f"生成している世代は {generation} 世代目です")
     remaining_time_label.config(text="およその残り時間: 50秒")
 
-    # 8つの初期遺伝子を作成し、表示する
-    # T2i と I2i で分岐させる
-    if is_uploaded:
-        genes, prompt_list = create_base_genes(input_text, first_image_path)
-    else:
-        genes, prompt_list = create_base_genes(input_text)
+    # 8つの初期遺伝子とプロンプト辞書を作成し、表示する
+    genes, prompt_dictionaly = create_base_genes(input_text)
+
+    # csv に prompt_dictionaly を新規辞書として保存
+    init_dictionary_csv(prompt_dictionaly)
         
     for i, gene in enumerate(genes):
         gene_data_label[i].config(text=str(gene))
         print(f"\033[93m遺伝子{i+1}の情報:\n{gene}\033[0m")
-    
-    # csv に prompt_list を新規辞書として保存
-    init_dictionary_csv(prompt_list)
 
     # カウントダウンタイマースレッドを開始
     threading.Thread(target=update_remaining_time, args=(50,)).start()
@@ -264,12 +256,12 @@ def first_iga_loop_generate_thread(genes):
     base_generator = ImageGenerator()
     # first_image_path が存在する/しないで分岐
     if first_image_path:
-        base_images, image_paths = base_generator.i2i_generate_images(genes, first_image_path)
+        base_images, this_image_paths = base_generator.i2i_generate_images(genes, first_image_path)
     else:
-        base_images, image_paths = base_generator.t2i_generate_images(genes)
+        base_images, this_image_paths = base_generator.t2i_generate_images(genes)
 
     # csv に遺伝子情報と生成画像情報を新規プロジェクトとして保存
-    init_project_csv(genes, image_paths, first_image_path)
+    init_project_csv(genes, this_image_paths)
     # csv にお気に入り情報を保存できるように初期化
     init_favorite_csv()
 
@@ -314,10 +306,15 @@ def iga_loop():
 def iga_loop_generate_thread(next_genes):
     # 遺伝子情報を元に画像生成を実行し、表示する
     next_generator = ImageGenerator()
-    next_images, image_paths = next_generator.generate_images(next_genes)
+
+    # first_image_path が存在する/しないで分岐
+    if first_image_path:
+        next_images, this_image_paths = next_generator.i2i_generate_images(next_genes, first_image_path)
+    else:
+        next_images, this_image_paths = next_generator.t2i_generate_images(next_genes)
 
     # csv に遺伝子情報と生成画像情報を保存
-    save_genes_and_images(next_genes, image_paths, generation)
+    save_genes_and_images(next_genes, this_image_paths, generation)
     
     # 評価UIを呼び出し、生成画像を表示する
     show_evaluation_UI()
@@ -337,7 +334,7 @@ def iga_loop_end():
 
 def save_user_evaluations():
     # まず評価点数を取得
-    evaluation_scores = [slider[i].get() for i in range(8)]
+    evaluation_scores = [sliders[i].get() for i in range(8)]
     print(f"\033[93m評価点数: {evaluation_scores}\033[0m")
     # csv に評価点数を保存
     save_evaluation_scores(evaluation_scores)

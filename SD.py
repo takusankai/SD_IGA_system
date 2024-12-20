@@ -71,33 +71,33 @@ class ImageGenerator:
         pipe = self._load_pipeline(AutoPipelineForImage2Image)
         images = []
         image_paths = []
+        init_image = Image.open(first_image_path).resize((self.width, self.height)).convert("RGB")
 
         for i, gene in enumerate(genes):
-            init_image = Image.open(first_image_path).resize((self.width, self.height))
-            init_image = init_image.convert("RGB")
-
-            prompt = ", ".join(gene.prompt)
-            # 品質系ポジティブ・ネガティブプロンプトをハードコーディング
-            positive_prompt = "realistic, masterpiece, best quality, high quality, ultla detailed, high resolution, 8K, HD"
-            negative_prompt = "worst quality, low quality, blurry, low resolution, out of focus, ugly, bad, poor quality, artifact, jpeg artifacts, error, bloken"
+            prompt = ", ".join(gene.prompt())
+            # 品質系ポジティブ・ネガティブプロンプトを用意
+            # positive_prompt = "realistic, masterpiece, best quality, high quality, ultla detailed, high resolution, 8K, HD"
+            # negative_prompt = "worst quality, low quality, blurry, low resolution, out of focus, ugly, bad, poor quality, artifact, jpeg artifacts, error, bloken"
             
-            generator = torch.Generator(device=self.device).manual_seed(gene.seed)
+            # generator = torch.Generator(device=self.device).manual_seed(gene.seed) # シード固定
+            generator = torch.Generator(device=self.device) # シード非固定
+
             # num_inference_steps * image_strengs = stepsとなるように調整
             num_inference_steps = int(gene.steps / gene.image_strengs) + 1
 
             result = pipe(
                 # Geneクラスのプロパティを使用
-                # prompt = prompt,
                 prompt,
-                # guidance_scale = gene.cfg_scale,
-                guidance_scale = 0.0,
                 image = init_image,
                 strength = gene.image_strengs,
                 generator = generator,
-                # num_inference_steps = num_inference_steps,
-                num_inference_steps = 4.0,
+                # guidance_scale = gene.cfg_scale,
+                num_inference_steps = num_inference_steps,
                 
                 # ハードコーディング
+                guidance_scale = 0.0,
+                # num_inference_steps = 4,
+                max_embeddings_multiples = 3.0, # デフォルトだと75トークンが限界なので3倍に拡張
                 # prompt_2 = positive_prompt,
                 # negative_prompt = negative_prompt,
 
@@ -120,26 +120,29 @@ class ImageGenerator:
         image_paths = []
 
         for i, gene in enumerate(genes):
-            prompt = ", ".join(gene.prompt)
-            # 品質系ポジティブ・ネガティブプロンプトをハードコーディング
-            positive_prompt = "realistic, masterpiece, best quality, high quality, ultla detailed, high resolution, 8K, HD"
-            negative_prompt = "worst quality, low quality, blurry, low resolution, out of focus, ugly, bad, poor quality, artifact, jpeg artifacts, error, bloken"
+            prompt = ", ".join(gene.prompt())
+
+            # 品質系ポジティブ・ネガティブプロンプトを用意
+            # positive_prompt = "realistic, masterpiece, best quality, high quality, ultla detailed, high resolution, 8K, HD"
+            # negative_prompt = "worst quality, low quality, blurry, low resolution, out of focus, ugly, bad, poor quality, artifact, jpeg artifacts, error, bloken"
             
-            generator = torch.Generator(device=self.device).manual_seed(gene.seed)
+            # generator = torch.Generator(device=self.device).manual_seed(gene.seed) # シード固定
+            generator = torch.Generator(device=self.device) # シード非固定
+
             # num_inference_steps * image_strengs = stepsとなるように調整
-            num_inference_steps = int(gene.steps / gene.image_strengs) + 1
+            # num_inference_steps = int(gene.steps / gene.image_strengs) + 1
 
             result = pipe(
                 # Geneクラスのプロパティを使用
-                # prompt = prompt,
                 prompt,
-                # guidance_scale = gene.cfg_scale,
-                guidance_scale = 0.0,
                 generator = generator,
+                # guidance_scale = gene.cfg_scale,
                 # num_inference_steps = num_inference_steps,
-                num_inference_steps = 4.0,
                 
                 # ハードコーディング
+                guidance_scale = 0.0,
+                num_inference_steps = 4,
+                max_embeddings_multiples = 3.0, # デフォルトだと75トークンが限界なので3倍に拡張
                 # prompt_2 = positive_prompt,
                 # negative_prompt = negative_prompt,
 

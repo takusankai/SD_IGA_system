@@ -1,9 +1,6 @@
 # GPT.py の print メッセージは「緑色」\033[92m で表示される
 import os
-from typing import Dict
 import openai
-import argparse
-import random
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
@@ -28,13 +25,12 @@ def load_env_settings():
 class CreateResponseFormat(BaseModel):
     prompt_dictionaly: list[str]
 
-def create_base_gene_prompts_from_GPT(length_list, input_text):
+def create_base_dictionaly_from_GPT(input_text):
     print("\033[92mプロンプトを作成するためにGPTにアクセスします\033[0m")
 
     dictionary_size, dictionary_language = load_env_settings()
     # なぜか 1 少なく返してくるので、 str の dictionary_size を int を経由し +1 して str に戻す
-    dictionary_size = str(int(dictionary_size) + 1)
-    prompt_list = []
+    # dictionary_size = str(int(dictionary_size) + 1)
     system_message = f"""
 あなたの目標は、ユーザーの入力に基づいて、画像生成AIが特定のデザインテーマに関連する画像を生成するための具体的なプロンプトを提案することです。
 
@@ -91,22 +87,15 @@ def create_base_gene_prompts_from_GPT(length_list, input_text):
     )
     response = completion.choices[0].message
 
-    # レスポンスを辞書形式に変換
-    prompt_dictionaly = {i + 1: word for i, word in enumerate(response.parsed.prompt_dictionaly)}
+    # レスポンスをstrのリストに変換
+    prompt_dictionaly = {word for word in response.parsed.prompt_dictionaly}
 
     # レスポンスが何個のプロンプト単語を含むリストであるかを確認
     print(f"\033[92mレスポンスのプロンプト単語数: {len(prompt_dictionaly)}\033[0m")
     # レスポンスのプロンプト単語を確認
-    for i, word in prompt_dictionaly.items():
-        print(f"\033[92mレスポンスのプロンプト単語{i}: {word}\033[0m")
-
-    # 8個のプロンプトを作成し、リストに追加
-    for i in range(8):
-        # ランダムに、かつ重複なく length_list[i] 個のプロンプトを選択してリストにする
-        prompt = random.sample(list(prompt_dictionaly.values()), length_list[i])
-        prompt_list.append(prompt)
-
-    return prompt_list
+    for i, word in enumerate(prompt_dictionaly):
+        print(f"\033[92mレスポンスのプロンプト単語{i+1}: {word}\033[0m")
+    return prompt_dictionaly
 
 # 遺伝子変異用の返答フォーマットの定義
 class MutateResponseFormat(BaseModel):
@@ -163,12 +152,6 @@ def mutate(prompt, length):
     completion = openai.beta.chat.completions.parse(
         model="gpt-4o-2024-08-06",
         messages=[
-            # あなたはプロンプトエンジニアで、なるべく具体的な単語で構成される公園のデザインのための画像生成AIのプロンプトを提案します。
-            # 今回のデザイン目標は次の通りです: 滑り台、揺れる動物の遊具、ブランコなど、多くの遊具が設置された子供向けの公園
-            # あなたはユーザーの入力を受け取って、そのフレーズを並び変えたり類義語に置き換えたりすることで、新しい1から4単語程度からなる語句を {str(length)} 個提案します。
-            # {"role": "system", "content": f"You are a prompt engineer and suggest prompts for an image generation AI for designing a park, consisting of specific words as much as possible."},
-            # {"role": "system", "content": f"The design goal this time is as follows: a children's park with many play equipment such as slides, rocking animal play equipment, and swings."},
-            # {"role": "system", "content": f"You take the user's input and suggest {str(length)} new phrases consisting of about 1 to 4 words by reordering the phrases and replacing them with synonyms."},
             {"role": "system", "content": system_message},
             {"role": "user", "content": prompt},
         ],
