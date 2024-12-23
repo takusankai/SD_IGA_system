@@ -29,17 +29,22 @@ class Gene:
     def prompt(self):
         # dictionaryN.csv から読み込む
         prompt_dictionaly = self.get_last_dictionaly()
-        # weight_list の値と組み合わせて、["(aaa:1.2)", "(bbb:0.8)"] のように返す
+        # print(prompt_dictionaly)
+        # print(self.weight_list)
+        print(len(prompt_dictionaly), len(self.weight_list))
+
+        # weight_list の値と組み合わせて、["(aaa:1.5)", "(bbb:0.5)"] のように返す
+        # weight_list が 0 なら返さない、1 なら 0.5、2 ならそのまま、3 なら 1.5 とする
         prompt = []
-        for i, word in enumerate(prompt_dictionaly):
+        for i in range(len(self.weight_list)):
             if self.weight_list[i] == 0:
                 continue
             elif self.weight_list[i] == 1:
-                prompt.append(f"({word}:0.5)")
+                prompt.append(f"({prompt_dictionaly[i]}:0.5)")
             elif self.weight_list[i] == 2:
-                prompt.append(f"{word}")
-            else:
-                prompt.append(f"({word}:2.0)")
+                prompt.append(f"({prompt_dictionaly[i]})")
+            elif self.weight_list[i] == 3:
+                prompt.append(f"({prompt_dictionaly[i]}:1.5)")
         
         return prompt
     
@@ -65,7 +70,7 @@ class Gene:
         translated_prompt = translator.translate(prompt)
 
         return (
-            f"参考画像の優先度: {self.image_strengs}\n"
-            f"シード値（乱数）: {self.seed}\n"
+            # f"参考画像の優先度: {self.image_strengs}\n"
+            # f"シード値（乱数）: {self.seed}\n"
             f"プロンプト:\n{translated_prompt}\n"
         )

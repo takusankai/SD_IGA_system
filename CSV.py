@@ -62,6 +62,28 @@ def init_dictionary_csv(prompt_dictionaly):
         writer = csv.writer(f)
         writer.writerow(prompt_dictionaly)
 
+def init_show_gene_count_csv():
+    print("\033[93m遺伝子表示回数を保存するためのcsvを初期化します\033[0m")
+    show_gene_count_name = get_new_file_name("show_gene_count")
+
+    # show_gene_count_name で新規遺伝子表示回数csvを作成し、情報を保存する
+    # generation, show_gene_count
+    # header 以外の情報はここでは保存しない
+    with open(os.path.join("projects", show_gene_count_name), "w", newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["generation", "show_gene_count"])
+
+def init_additional_prompt_csv():
+    print("\033[93m追加プロンプトを保存するためのcsvを初期化します\033[0m")
+    additional_prompt_name = get_new_file_name("additional_prompt")
+
+    # additional_prompt_name で新規追加プロンプトcsvを作成し、情報を保存する
+    # generation, add_type, additional_prompt, additional_prompt_strength
+    # header 以外の情報はここでは保存しない
+    with open(os.path.join("projects", additional_prompt_name), "w", newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["generation", "add_type", "additional_prompt", "additional_prompt_strength"])
+
 def save_evaluation_scores(evaluation_scores):
     project_name = get_last_file_name("project")
 
@@ -117,6 +139,65 @@ def save_genes_and_images(next_genes, image_paths, generation):
         for i, gene in enumerate(next_genes):
             writer.writerow([generation * 8 - 7 + i, generation, 0, image_paths[i], gene.image_strengs, gene.seed, gene.steps, gene.prompt_length, gene.cfg_scale, *gene.weight_list])
 
+def save_additional_prompt(before_additional_prompt, additional_prompt, additional_prompt_strength, add_type, generation):
+    # dictionary_n.csv に追加プロンプト単語を追加
+    project_name = get_last_file_name("dictionary")
+
+    # 1行目に書かれたプロンプト単語の末尾に追加プロンプト単語を追加し、再度書き込む
+    with open(os.path.join("projects", project_name), "r+", newline='') as f:
+        reader = csv.reader(f)
+        prompt_dictionaly = list(reader)[0]
+        
+        # 追加プロンプトがリストであることを確認し、リストに追加
+        if isinstance(additional_prompt, list):
+            prompt_dictionaly.extend(additional_prompt)
+        else:
+            prompt_dictionaly.append(additional_prompt)
+        
+        # ファイルの先頭に戻り、追加プロンプト単語を追加したリストを1行目に書き込む
+        f.seek(0)
+        writer = csv.writer(f)
+        writer.writerow(prompt_dictionaly)
+        f.truncate()
+
+    # project_n.csv の header に weight_N+1 を追加し、すべての行の末尾に0を追加して書き換える
+    project_name = get_last_file_name("project")
+
+    with open(os.path.join("projects", project_name), "r+", newline='') as f:
+        reader = csv.reader(f)
+        header = next(reader)
+        
+        # csv header の末尾の weight_N を取得し、末尾に加えて weight_N+1 を追加して書き換える
+        weight_N = int(header[-1].split("_")[-1])
+        new_weight = f"weight_{weight_N + 1}"
+        header.append(new_weight)
+        
+        # すべての行の末尾に0を追加して書き換える
+        lines = list(reader)
+        for line in lines:
+            line.append("0")
+        f.seek(0)
+        writer = csv.writer(f)
+        writer.writerow(header)
+        writer.writerows(lines)
+        f.truncate()
+
+    # additional_prompt_n.csv に追加プロンプト情報を保存
+    additional_prompt_name = get_last_file_name("additional_prompt")
+
+    # generation, add_type(boolian), additional_prompt(str), additional_prompt_strength(int) を保存
+    with open(os.path.join("projects", additional_prompt_name), "a", newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow([generation, add_type, before_additional_prompt, additional_prompt_strength])
+
+def save_show_gene_count(generation, show_gene_count):
+    show_gene_count_name = get_last_file_name("show_gene_count")
+
+    # generation, show_gene_count を保存
+    with open(os.path.join("projects", show_gene_count_name), "a", newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow([generation, show_gene_count])
+
 def get_last_generation_genes():
     # csv から前世代の遺伝子情報を取得
     project_name = get_last_file_name("project")
@@ -143,5 +224,6 @@ def get_last_generation_genes():
                 evaluation_score=int(line[2]) if line[2] else 12345 # 12345はエラー検証用の記録されないはずの値
             )
             last_generation_genes.append(gene)
-
+            print(f"\033[93mgene log : {gene}\033[0m")
+    
     return last_generation_genes

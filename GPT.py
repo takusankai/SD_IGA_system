@@ -29,72 +29,87 @@ def create_base_dictionaly_from_GPT(input_text):
     print("\033[92mプロンプトを作成するためにGPTにアクセスします\033[0m")
 
     dictionary_size, dictionary_language = load_env_settings()
+    print(f"\033[92m辞書語数: {dictionary_size}\033[0m")
+    print(f"\033[92m辞書言語: {dictionary_language}\033[0m")
     # なぜか 1 少なく返してくるので、 str の dictionary_size を int を経由し +1 して str に戻す
-    # dictionary_size = str(int(dictionary_size) + 1)
-    system_message = f"""
-あなたの目標は、ユーザーの入力に基づいて、画像生成AIが特定のデザインテーマに関連する画像を生成するための具体的なプロンプトを提案することです。
+    dictionary_size = str(int(dictionary_size) + 1)
 
-- 入力として提供された情報を基に、テーマに関連する1から4単語で構成されるプロンプトを考え出します。
-- 完全に同じフレーズは提案してはいけませんが、一部の単語が一致したフレーズを提案することは可能です。
-- 提案するプロンプトの数は {dictionary_size} 個です。
-- プロンプトは可能な限り具体的で視覚的に明確なイメージを伝える単語を選んでください。
-- 提案するプロンプトは{dictionary_language}で構成します。
+    system_message = f"""
+あなたは優秀なプロンプトエンジニアで、ユーザーの入力に基づいて、画像生成AIのための具体的なプロンプトを提案します。
 
 # Steps
 
-1. ユーザーから提供された情報を分析し、テーマに関連するキーワードやテーマを特定します。
-2. 特定したテーマに基づき、具体的な単語やフレーズを選定します。
-3. 1から4単語で構成されるプロンプトを {dictionary_size} 個生成します。
-4. プロンプトが視覚的にわかりやすいイメージを伝えられるよう工夫します。
+1. ユーザーから入力として提供された入力を確認し、目標の画像を生成するために有効なキーワードを特定します。
+2. 特定したキーワードに基づき、具体的に1から3単語で構成されるフレーズを考案します。
+3. フレーズをOutput Formatに従った形で {dictionary_size} 個生成し、プロンプトとします。
+4. 生成されたプロンプトがrulesとOutput Formatに従っていれば提供し、そうでない場合(特に提案フレーズが {dictionary_size} 個でない場合)は再生成します。
+
+# rules
+- 提案するフレーズの数は {dictionary_size} 個です。
+- 提案するフレーズは{dictionary_language}で構成します。
+- 完全に同じフレーズは提案してはいけませんが、一部の単語が一致したフレーズを提案することは可能です。
 
 # Output Format
 
-- 各プロンプトは{dictionary_language}の1から4単語で構成されます。
+- 各プロンプトは{dictionary_language}の1から3単語で構成されます。
 - 提案するプロンプトは合計で {dictionary_size} 個。
-- 以下の形式で出力してください: 
-{{1: "word phrase one", 2: "word phrase two", ..., {dictionary_size}: "word phrase N"}}
+- 次の形式で出力してください: {{1: "word phrase one", 2: "word phrase two", ..., {dictionary_size}: "word phrase N"}}
 
 # Examples
 
 - 入力例1: [滑り台、揺れる動物の遊具などが設置された公園]
-- プロンプト:
+- 出力フレーズ例:
     1. "Rocking animals"
-    2. "Slide Structures"
-    3. "Children's playground"
+    2. "Slide"
+    3. "slides and swings"
 
-- 入力例2: [デスク、テーブルなどを青色を基調に統一したインテリアデザイン]
-- プロンプト:
-    1. "blue furniture"
-    2. "compact table"
-    3. "monotone Design"
-
-(実際の例では、ユーザーからの入力に応じて調整してください。)
+- 入力例2: [デスク、ベットなどを青色を基調に統一したインテリアデザイン]
+- 出力フレーズ例:
+    1. "blue"
+    2. "blue desk"
+    3. "monotone furniture"
 
 # Notes
 
-- エッジケースとして、非現実的な入力があった場合は、現実的なデザインに関連するプロンプトを生成してください。
-- 提案する単語が視覚的イメージを効果的に伝えられるように具体的なオブジェクトを表す名詞を含めるようにするなどの工夫してください。
-    """
+- 1語のフレーズから4語のフレーズまでバランスよく提案してください。
+- 重要度の高い単語は多くのフレーズに含める一方で、多様性の無いプロンプトにはなることは避けてください。
+- フレーズには具体的なオブジェクトを表す単語を必ず1つ以上含めるようにしてください。
+- ユーザーの入力に応じて柔軟に調整してください。
+"""
     
-    # GPTへのリクエスト
-    completion = openai.beta.chat.completions.parse(
-        model="gpt-4o-2024-08-06",
-        messages=[
-            {"role": "system", "content": system_message},
-            {"role": "user", "content": input_text},
-        ],
-        response_format=CreateResponseFormat,
-    )
-    response = completion.choices[0].message
+    # 50個のプロンプト単語を含む返却があるまでループ
+    is_fifty_words = True
+    while is_fifty_words:
+        # GPTへのリクエスト
+        completion = openai.beta.chat.completions.parse(
+            model="gpt-4o-2024-08-06",
+            messages=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": input_text},
+            ],
+            max_tokens=5000,
+            response_format=CreateResponseFormat,
+        )
+        response = completion.choices[0].message
 
-    # レスポンスをstrのリストに変換
-    prompt_dictionaly = {word for word in response.parsed.prompt_dictionaly}
+        # レスポンスをstrのリストに変換
+        prompt_dictionaly = {word for word in response.parsed.prompt_dictionaly}
 
-    # レスポンスが何個のプロンプト単語を含むリストであるかを確認
-    print(f"\033[92mレスポンスのプロンプト単語数: {len(prompt_dictionaly)}\033[0m")
+        # レスポンスが何個のプロンプト単語を含むリストであるかを確認
+        if len(prompt_dictionaly) == 50:
+            is_fifty_words = False
+        else:
+            print("\033[92m50個のプロンプト単語を含むリストが生成されていません\033[0m")
+        print(f"\033[92mレスポンスのプロンプト単語数: {len(prompt_dictionaly)}\033[0m")
+
     # レスポンスのプロンプト単語を確認
     for i, word in enumerate(prompt_dictionaly):
         print(f"\033[92mレスポンスのプロンプト単語{i+1}: {word}\033[0m")
+    
+    # 生成に使われたトークン量を取得
+    total_tokens = completion.usage.total_tokens
+    print(f"\033[92m生成に使われたトークン量: {total_tokens}\033[0m")
+    
     return prompt_dictionaly
 
 # 遺伝子変異用の返答フォーマットの定義
@@ -103,18 +118,23 @@ class MutateResponseFormat(BaseModel):
 
 def mutate(prompt, length):
     print("\033[92m遺伝子を変異させるためにGPTにアクセスします\033[0m")
+
     _, dictionary_language = load_env_settings()
+    print(f"\033[92m辞書言語: {dictionary_language}\033[0m")
+
     prompt = " ".join(prompt)
     input_design_target = "滑り台、揺れる動物の遊具、ブランコなどの遊具が多く設置された楽しい子供向けの公園"
+
     system_message = f"""
-あなたは優秀なプロンプトエンジニアで、具体的な単語で構成されるデザインのための画像生成AIのプロンプトを{dictionary_language}で提案します。
+あなたは優秀なプロンプトエンジニアで、ユーザーの入力に基づいて、画像生成AIのための具体的なプロンプトを提案します。
 
 ## design goal
 - デザイン目標: {input_design_target}
 
 ## rules
-- 各フレーズは1から4単語ほどで構成
+- 各フレーズは1から4単語で構成
 - フレーズの数: {str(length)}
+- {dictionary_language}で構成
 
 ## approach
 - 入力としてベースとなるフレーズを受け取り、このフレーズの順序を並び変える
@@ -146,7 +166,7 @@ def mutate(prompt, length):
 
 - 類似のニュアンスを伝えるために創造性を活用すること
 - フレーズには具体的な単語を使用し、視覚的なイメージを伝えるようにする
-    """
+"""
 
     # GPTへのリクエスト
     completion = openai.beta.chat.completions.parse(
@@ -155,6 +175,7 @@ def mutate(prompt, length):
             {"role": "system", "content": system_message},
             {"role": "user", "content": prompt},
         ],
+        max_tokens=5000,
         response_format=MutateResponseFormat,
     )
     response = completion.choices[0].message
@@ -162,5 +183,7 @@ def mutate(prompt, length):
     # レスポンスを確認
     print(f"\033[92m提案されたレスポンスのプロンプト単語数: {len(response.parsed.mutated_prompt_words)}\033[0m")
     print(f"\033[92m提案されたレスポンスのプロンプト単語: {response.parsed.mutated_prompt_words}\033[0m")
+    total_tokens = completion.usage.total_tokens
+    print(f"\033[92m生成に使われたトークン量: {total_tokens}\033[0m")
 
     return response.parsed.mutated_prompt_words

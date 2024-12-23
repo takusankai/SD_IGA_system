@@ -1,6 +1,5 @@
 # IGA_module_3.py の print メッセージは「シアン」\033[96m で表示される
 import random
-from PIL import Image
 from GENE import Gene
 from GPT import create_base_dictionaly_from_GPT, mutate
 import os
@@ -41,9 +40,12 @@ def create_base_genes(input_text):
     prompt_dictionaly = create_base_dictionaly_from_GPT(input_text)
     return genes, prompt_dictionaly
 
-def create_next_generation_genes(genes):
+def create_next_generation_genes(genes, additional_prompt, additional_prompt_strength):
     print("\033[96m選択された遺伝的アルゴリズムは4番。\033[0m")
 
+    # genes に追加プロンプトと強度を割り振る
+    if additional_prompt:
+        genes = additional(genes, additional_prompt_strength)
     # 次の遺伝子となる8個のgeneのリストを作成
     new_genes = [Gene() for _ in range(8)]
     # 選択
@@ -54,6 +56,18 @@ def create_next_generation_genes(genes):
     new_genes = mutate(parent_gene_pairs, new_genes)
 
     return new_genes
+
+def additional(genes, additional_prompt_strength):
+    # 全ての gene.weight_list の末尾を additional_prompt_strength に応じた値に変更
+    print(f"\033[96mgenesの数: {len(genes)}\033[0m")
+    for gene in genes:
+        # {addtional_prompt_strength}% の確率で weight_list の末尾を 1 から 3 に変更
+        # 1 - {addtional_prompt_strength}% の確率で weight_list の末尾を 0 に変更
+        additional_weight = random.choices([0, 1, 2, 3], [100 - additional_prompt_strength, additional_prompt_strength/3, additional_prompt_strength/3, additional_prompt_strength/3])
+        # list になっているので、0番目の要素をintに変換
+        gene.weight_list[-1] = additional_weight[0]
+        print(f"\033[96m追加されたweight_listの値: {additional_weight}\033[0m")
+    return genes
 
 def select(genes):
     # 評価点を参照し、その個体の評価 / 合計評価の割合を確率として選択し、両親のペアを4組作成

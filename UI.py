@@ -6,6 +6,7 @@ import csv
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
+from deep_translator import GoogleTranslator
 from dotenv import load_dotenv
 from IGA_modules.IGA_module_4 import create_base_genes, create_next_generation_genes # ここを書き換える形で IGA のモジュールを変更する
 from CSV import * # CSV.py の全ての関数をインポート
@@ -29,10 +30,12 @@ first_image_path = ""
 favorite_states = [False] * 8
 # 評価UIにて、遺伝子情報の表示/非表示の状態を保持する変数
 show_gene_status = False
+# 評価UIにて、遺伝子情報の表示/非表示の切り替え回数を保持する変数
+show_gene_count = 0
 
 # 全UI要素を初期化し、メインイベントループを開始する
 def setup_ui():
-    global window, canvas, scrollbar, scrollable_frame, input_field, start_iga_loop_button, first_image_label, upload_button, input_text_label, explain_text_label, gene_data_frame, gene_data_label, generation_step_label, remaining_time_label, generated_image_frame, generated_image_label, sliders, favorite_buttons, before_star_image, after_star_image, next_generation_button, end_loop_button, show_gene_switch, favorite_images_frame, end_message_label, exit_button
+    global window, canvas, scrollbar, scrollable_frame, input_field, start_iga_loop_button, first_image_label, upload_button, input_text_label, explain_text_label, gene_data_frame, gene_data_label, generation_step_label, remaining_time_label, generated_image_frame, generated_image_label, sliders, favorite_buttons, before_star_image, after_star_image, add_prompt_frame, add_prompt_text_label, add_prompt_text, add_prompt_slider_label, add_prompt_slider, next_generation_button, end_loop_button, show_gene_switch, favorite_images_frame, end_message_label, exit_button
     window = tk.Tk()
     window.geometry(f"{WINDOW_SIZE_HEIGHT}x{WINDOW_SIZE_WIDTH}")
 
@@ -91,6 +94,13 @@ def setup_ui():
         button.config(image=before_star_image)
         button.image_before = before_star_image
         button.image_after = after_star_image
+    # 評価UIに追加するテキスト窓とスライダーを作成
+    add_prompt_frame = tk.Frame(scrollable_frame)
+    add_prompt_text_label = tk.Label(add_prompt_frame, text="追加プロンプト入力欄", font=("Arial", int(FONT_SIZE / 2)))
+    add_prompt_text = tk.Text(add_prompt_frame, font=("Arial", FONT_SIZE), width=int(WINDOW_SIZE_WIDTH * (30/1000)), height=1, wrap=tk.WORD)
+    add_prompt_slider_label = tk.Label(add_prompt_frame, text="追加プロンプトの優先度", font=("Arial", int(FONT_SIZE / 2)))
+    add_prompt_slider = tk.Scale(add_prompt_frame, from_=0, to=100, orient=tk.HORIZONTAL, length=250)
+    add_prompt_slider.set(0) # 初期値を0に設定
     # 次の世代へ進むボタンを作成
     next_generation_button = tk.Button(scrollable_frame, text="次の世代へ進む", font=("Arial", FONT_SIZE), width=int(WINDOW_SIZE_WIDTH * (40/1000)), height=2, command=iga_loop)
     # この世代で終了するボタンを作成
@@ -140,11 +150,16 @@ def show_evaluation_UI(redraw=False):
     for i in range(8):
         generated_image_label[i].grid(row=(i//4), column=(i%4), padx=20, pady=20)
         if not redraw: sliders[i].set(50) # 表示/非表示の切り替え時はスライダーの値をリセットしない
+        if not redraw: add_prompt_slider.set(0) # 表示/非表示の切り替え時は追加スライダーの値をリセットしない
         sliders[i].grid(row=(i//4)+2, column=(i%4), padx=5, pady=20, sticky="w")
         favorite_states[i] = False
         favorite_buttons[i].config(image=favorite_buttons[i].image_before)
         favorite_buttons[i].grid(row=(i//4)+2, column=(i%4), padx=0, pady=20, sticky="e")
-    # 遺伝子情報の表示/非表示スイッチを表示
+    add_prompt_frame.pack(pady=10)
+    add_prompt_text_label.grid(row=0, column=0, padx=10, pady=10, sticky="w")
+    add_prompt_text.grid(row=0, column=1, padx=10, pady=10, sticky="w")
+    add_prompt_slider_label.grid(row=0, column=2, padx=10, pady=10, sticky="w")
+    add_prompt_slider.grid(row=0, column=3, padx=10, pady=10, sticky="w")
     show_gene_switch.pack(pady=10)
     # 表示状態に応じて遺伝子情報を表示
     if show_gene_status:
@@ -187,6 +202,7 @@ def show_finish_UI():
 def clear_ui():
     for widget in scrollable_frame.winfo_children():
         widget.pack_forget()
+        widget.grid_forget()
 
 def upload_image():
     global first_image_path
@@ -215,8 +231,9 @@ def toggle_favorite(i):
         favorite_buttons[i].config(image=favorite_buttons[i].image_before)
 
 def toggle_show_gene_status():
-    global show_gene_status
+    global show_gene_status, show_gene_count
     show_gene_status = not show_gene_status
+    show_gene_count += 1
     print(f"\033[93m遺伝子情報の表示状態: {show_gene_status}\033[0m")
     if show_gene_status:
         show_gene_switch.config(text="遺伝子情報を非表示にする")
@@ -264,6 +281,10 @@ def first_iga_loop_generate_thread(genes):
     init_project_csv(genes, this_image_paths)
     # csv にお気に入り情報を保存できるように初期化
     init_favorite_csv()
+    # csv にプロンプト表示/非表示切り替えの回数を保存できるように初期化
+    init_show_gene_count_csv()
+    # csv に追加プロンプト情報を保存できるように初期化
+    init_additional_prompt_csv()
 
     # 評価UIを呼び出し、生成画像を表示する
     show_evaluation_UI()
@@ -280,6 +301,26 @@ def iga_loop():
 
     # 評価点数とお気に入り情報を保存
     save_user_evaluations()
+    # 追加プロンプト（英訳）とその強度を保存
+    before_additional_prompt = add_prompt_text.get("1.0", "end-1c")
+    additional_prompt_strength = add_prompt_slider.get()
+    translator = GoogleTranslator(source='ja', target='en')
+    additional_prompt = translator.translate(before_additional_prompt)
+
+    if additional_prompt:
+        print(f"\033[93m追加プロンプトとその強度: {additional_prompt}, {additional_prompt_strength}\033[0m")
+        save_additional_prompt(before_additional_prompt, additional_prompt, additional_prompt_strength, True, generation)
+    else:
+        # # 追加プロンプトが空の場合は GPT から生成させる
+        # additional_prompt = get_additional_prompt(input_text_label.cget("text")) GPT.py に get_additional_prompt は未実装
+        # additional_prompt_strength = random.randint(0, 100)
+        # print(f"\033[93m追加プロンプトとその強度: {additional_prompt}, {additional_prompt_strength}\033[0m")
+        # save_additional_prompt(additional_prompt, False, additional_prompt_strength, generation)
+        pass
+
+    # 遺伝情報の表示/非表示の切り替え回数を保存
+    print(f"\033[93m遺伝子情報の表示/非表示の切り替え回数: {show_gene_count}\033[0m")
+    save_show_gene_count(show_gene_count, generation)
 
     # 生成中UIを表示
     input_text = input_text_label.cget("text")
@@ -290,7 +331,11 @@ def iga_loop():
 
     # 前世代の遺伝子情報を取得し、次世代の遺伝子を生成
     before_genes = get_last_generation_genes()
-    next_genes = create_next_generation_genes(before_genes)
+    next_genes = create_next_generation_genes(before_genes, additional_prompt, additional_prompt_strength)
+
+    # 追加プロンプトとその強度をリセット
+    add_prompt_text.delete("1.0", "end")
+    add_prompt_slider.set(0)
 
     # 生成した遺伝子情報を表示
     for i, gene in enumerate(next_genes):
@@ -326,6 +371,19 @@ def iga_loop_generate_thread(next_genes):
 def iga_loop_end():
     # 評価点数とお気に入り情報を保存
     save_user_evaluations()
+    # 追加プロンプトとその強度を保存
+    additional_prompt = add_prompt_text.get("1.0", "end-1c")
+    additional_prompt_strength = add_prompt_slider.get()
+    if additional_prompt:
+        save_additional_prompt(additional_prompt, additional_prompt_strength, True, generation)
+    else:
+        # # 追加プロンプトが空の場合は GPT から生成させる
+        # additional_prompt = get_additional_prompt(input_text_label.cget("text")) GPT.py に get_additional_prompt は未実装
+        # additional_prompt_strength = random.randint(0, 100)
+        # save_additional_prompt(additional_prompt, False, additional_prompt_strength, generation)
+        pass
+    # 遺伝情報の表示/非表示の切り替え回数を保存
+    save_show_gene_count(show_gene_count, generation)
 
     # 終了UIを表示
     input_text = input_text_label.cget("text")
