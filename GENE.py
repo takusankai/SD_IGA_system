@@ -27,11 +27,8 @@ class Gene:
         self.evaluation_score = evaluation_score
 
     def prompt(self):
-        # dictionaryN.csv から読み込む
+        # dictionary_N.csv から読み込む
         prompt_dictionaly = self.get_last_dictionaly()
-        # print(prompt_dictionaly)
-        # print(self.weight_list)
-        print(len(prompt_dictionaly), len(self.weight_list))
 
         # weight_list の値と組み合わせて、["(aaa:1.5)", "(bbb:0.5)"] のように返す
         # weight_list が 0 なら返さない、1 なら 0.5、2 ならそのまま、3 なら 1.5 とする
@@ -42,7 +39,7 @@ class Gene:
             elif self.weight_list[i] == 1:
                 prompt.append(f"({prompt_dictionaly[i]}:0.5)")
             elif self.weight_list[i] == 2:
-                prompt.append(f"({prompt_dictionaly[i]})")
+                prompt.append(f"{prompt_dictionaly[i]}")
             elif self.weight_list[i] == 3:
                 prompt.append(f"({prompt_dictionaly[i]}:1.5)")
         

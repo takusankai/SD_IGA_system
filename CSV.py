@@ -34,7 +34,7 @@ def init_project_csv(genes, image_paths):
     # id, generation, evaluation_score, this_image_path, image_strengs, seed, steps, prompt_length, cfg_scale, weight_1, weight_2, ..., weight_50
     # idは1から8までの連番、世代は1、評価点数は0、this_image_pathは空
     header = ["id", "generation", "evaluation_score", "this_image_path", "image_strengs", "seed", "steps", "prompt_length", "cfg_scale"] + [f"weight_{i+1}" for i in range(50)]
-    with open(os.path.join("projects", project_name), "w", newline='') as f:
+    with open(os.path.join("projects", project_name), "w", newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow(header)
         for i, gene in enumerate(genes):
@@ -47,7 +47,7 @@ def init_favorite_csv():
     # favorite_name で新規お気に入りcsvを作成し、情報を保存する
     # id, generation, favorite_image_path
     # idは1から8までの連番、世代は1、お気に入りはFalse
-    with open(os.path.join("projects", favorite_name), "w", newline='') as f:
+    with open(os.path.join("projects", favorite_name), "w", newline='', encoding='utf-8') as f:
         # ヘッダーのみのcsvを作成し初期化
         writer = csv.writer(f)
         writer.writerow(["id", "generation", "favorite_image_path"])
@@ -58,7 +58,7 @@ def init_dictionary_csv(prompt_dictionaly):
 
     # dictionary_name で新規辞書csvを作成し、情報を保存する
     # prompt_dictionaly の50個の要素を1行目にまとめて保存する
-    with open(os.path.join("projects", dictionary_name), "w", newline='') as f:
+    with open(os.path.join("projects", dictionary_name), "w", newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow(prompt_dictionaly)
 
@@ -69,7 +69,7 @@ def init_show_gene_count_csv():
     # show_gene_count_name で新規遺伝子表示回数csvを作成し、情報を保存する
     # generation, show_gene_count
     # header 以外の情報はここでは保存しない
-    with open(os.path.join("projects", show_gene_count_name), "w", newline='') as f:
+    with open(os.path.join("projects", show_gene_count_name), "w", newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow(["generation", "show_gene_count"])
 
@@ -80,7 +80,7 @@ def init_additional_prompt_csv():
     # additional_prompt_name で新規追加プロンプトcsvを作成し、情報を保存する
     # generation, add_type, additional_prompt, additional_prompt_strength
     # header 以外の情報はここでは保存しない
-    with open(os.path.join("projects", additional_prompt_name), "w", newline='') as f:
+    with open(os.path.join("projects", additional_prompt_name), "w", newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow(["generation", "add_type", "additional_prompt", "additional_prompt_strength"])
 
@@ -88,7 +88,7 @@ def save_evaluation_scores(evaluation_scores):
     project_name = get_last_file_name("project")
 
     # csvを開き、最終行-7から最終行までの8行に評価点数を保存する
-    with open(os.path.join("projects", project_name), "r+", newline='') as f:
+    with open(os.path.join("projects", project_name), "r+", newline='', encoding='utf-8') as f:
         lines = f.readlines()
         last_line = len(lines) - 1
         for i in range(8):
@@ -104,7 +104,7 @@ def save_favorite_images(is_favorite_images, generation):
     project_name = get_last_file_name("project")
     this_generation_image_paths = []
 
-    with open(os.path.join("projects", project_name), "r", newline='') as f:
+    with open(os.path.join("projects", project_name), "r", newline='', encoding='utf-8') as f:
         reader = csv.reader(f)
         next(reader)
         lines = list(reader)
@@ -118,7 +118,7 @@ def save_favorite_images(is_favorite_images, generation):
     favorite_numbers = [int(f.split("_")[-1].split(".")[0]) for f in favorite_files if f.startswith("favorite_")]
     favorite_numbers.sort()
     favorite_name = "favorite_" + str(favorite_numbers[-1]) + ".csv"
-    with open(os.path.join("projects", favorite_name), "a", newline='') as f:
+    with open(os.path.join("projects", favorite_name), "a", newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         for i, is_favorite in enumerate(is_favorite_images):
             if is_favorite:
@@ -134,7 +134,7 @@ def save_favorite_images(is_favorite_images, generation):
 def save_genes_and_images(next_genes, image_paths, generation):
     project_name = get_last_file_name("project")
 
-    with open(os.path.join("projects", project_name), "a", newline='') as f:
+    with open(os.path.join("projects", project_name), "a", newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         for i, gene in enumerate(next_genes):
             writer.writerow([generation * 8 - 7 + i, generation, 0, image_paths[i], gene.image_strengs, gene.seed, gene.steps, gene.prompt_length, gene.cfg_scale, *gene.weight_list])
@@ -144,7 +144,7 @@ def save_additional_prompt(before_additional_prompt, additional_prompt, addition
     project_name = get_last_file_name("dictionary")
 
     # 1行目に書かれたプロンプト単語の末尾に追加プロンプト単語を追加し、再度書き込む
-    with open(os.path.join("projects", project_name), "r+", newline='') as f:
+    with open(os.path.join("projects", project_name), "r+", newline='', encoding='utf-8') as f:
         reader = csv.reader(f)
         prompt_dictionaly = list(reader)[0]
         
@@ -163,7 +163,7 @@ def save_additional_prompt(before_additional_prompt, additional_prompt, addition
     # project_n.csv の header に weight_N+1 を追加し、すべての行の末尾に0を追加して書き換える
     project_name = get_last_file_name("project")
 
-    with open(os.path.join("projects", project_name), "r+", newline='') as f:
+    with open(os.path.join("projects", project_name), "r+", newline='', encoding='utf-8') as f:
         reader = csv.reader(f)
         header = next(reader)
         
@@ -186,7 +186,7 @@ def save_additional_prompt(before_additional_prompt, additional_prompt, addition
     additional_prompt_name = get_last_file_name("additional_prompt")
 
     # generation, add_type(boolian), additional_prompt(str), additional_prompt_strength(int) を保存
-    with open(os.path.join("projects", additional_prompt_name), "a", newline='') as f:
+    with open(os.path.join("projects", additional_prompt_name), "a", newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow([generation, add_type, before_additional_prompt, additional_prompt_strength])
 
@@ -194,7 +194,7 @@ def save_show_gene_count(generation, show_gene_count):
     show_gene_count_name = get_last_file_name("show_gene_count")
 
     # generation, show_gene_count を保存
-    with open(os.path.join("projects", show_gene_count_name), "a", newline='') as f:
+    with open(os.path.join("projects", show_gene_count_name), "a", newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow([generation, show_gene_count])
 
@@ -204,7 +204,7 @@ def get_last_generation_genes():
     last_generation_genes = []
 
     # csvを開き、最終行-7から最終行までの8行の遺伝子情報（評価とthis_image_pathも含む）を取得
-    with open(os.path.join("projects", project_name), "r", newline='') as f:
+    with open(os.path.join("projects", project_name), "r", newline='', encoding='utf-8') as f:
         reader = csv.reader(f)
         next(reader) # ヘッダーをスキップ
         lines = list(reader)
@@ -224,6 +224,6 @@ def get_last_generation_genes():
                 evaluation_score=int(line[2]) if line[2] else 12345 # 12345はエラー検証用の記録されないはずの値
             )
             last_generation_genes.append(gene)
-            print(f"\033[93mgene log : {gene}\033[0m")
+        # print(f"\033[93mgene log : {gene}\033[0m")
     
     return last_generation_genes

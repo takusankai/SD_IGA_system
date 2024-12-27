@@ -250,7 +250,7 @@ def first_iga_loop():
     show_generate_UI()
     input_text_label.config(text=f"目標: {input_text}")
     generation_step_label.config(text=f"生成している世代は {generation} 世代目です")
-    remaining_time_label.config(text="およその残り時間: 50秒")
+    remaining_time_label.config(text="およその残り時間: 30秒")
 
     # 8つの初期遺伝子とプロンプト辞書を作成し、表示する
     genes, prompt_dictionaly = create_base_genes(input_text)
@@ -263,7 +263,7 @@ def first_iga_loop():
         print(f"\033[93m遺伝子{i+1}の情報:\n{gene}\033[0m")
 
     # カウントダウンタイマースレッドを開始
-    threading.Thread(target=update_remaining_time, args=(50,)).start()
+    threading.Thread(target=update_remaining_time, args=(30,)).start()
     # 画像生成スレッドを開始
     threading.Thread(target=first_iga_loop_generate_thread, args=(genes,)).start()
 
@@ -327,7 +327,7 @@ def iga_loop():
     show_generate_UI()
     input_text_label.config(text=f"{input_text}")
     generation_step_label.config(text=f"生成している世代は {generation} 世代目です")
-    remaining_time_label.config(text="およその残り時間: 50秒")
+    remaining_time_label.config(text="およその残り時間: 30秒")
 
     # 前世代の遺伝子情報を取得し、次世代の遺伝子を生成
     before_genes = get_last_generation_genes()
@@ -343,7 +343,7 @@ def iga_loop():
         print(f"\033[93m遺伝子{i+1}の情報:\n{gene}\033[0m")
 
     # カウントダウンタイマースレッドを開始
-    threading.Thread(target=update_remaining_time, args=(50,)).start()
+    threading.Thread(target=update_remaining_time, args=(30,)).start()
     # 画像生成スレッドを開始
     threading.Thread(target=iga_loop_generate_thread, args=(next_genes,)).start()
 
