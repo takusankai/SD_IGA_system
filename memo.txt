@@ -18,7 +18,7 @@ D:\downloads\develop\SD_IGA_system\sample_images\cozy_life.jpg
 からすと一緒に帰りましょう
 
 [練習用]
-D:\downloads\develop\SD_IGA_system\sample_images\tokyo_city_university.jpg
+猫耳の生えた赤髪の女性
 
 [乱数]
 1, 2, 3, 4 | Get-Random -Count 4
