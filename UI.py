@@ -60,7 +60,7 @@ def setup_ui():
 
     # 入力フィールドを作成
     input_field = tk.Text(scrollable_frame, font=("Arial", FONT_SIZE), width=int(WINDOW_SIZE_WIDTH * (70/1000)), height=4, wrap=tk.WORD)
-    input_field.insert("1.0", "滑り台、揺れる動物の遊具、ブランコなど、多くの遊具が設置された子供向けの公園")
+    input_field.insert("1.0", "")
     # 生成システム開始ボタンを作成
     start_iga_loop_button = tk.Button(scrollable_frame, text="生成システムを開始", font=("Arial", FONT_SIZE), width=int(WINDOW_SIZE_WIDTH * (40/1000)), height=2, command=first_iga_loop)
     # 初期画像ラベルを作成
@@ -100,7 +100,7 @@ def setup_ui():
     add_prompt_text = tk.Text(add_prompt_frame, font=("Arial", FONT_SIZE), width=int(WINDOW_SIZE_WIDTH * (30/1000)), height=1, wrap=tk.WORD)
     add_prompt_slider_label = tk.Label(add_prompt_frame, text="追加プロンプトの優先度", font=("Arial", int(FONT_SIZE / 2)))
     add_prompt_slider = tk.Scale(add_prompt_frame, from_=0, to=100, orient=tk.HORIZONTAL, length=250)
-    add_prompt_slider.set(0) # 初期値を0に設定
+    add_prompt_slider.set(100) # 初期値を100に設定
     # 次の世代へ進むボタンを作成
     next_generation_button = tk.Button(scrollable_frame, text="次の世代へ進む", font=("Arial", FONT_SIZE), width=int(WINDOW_SIZE_WIDTH * (40/1000)), height=2, command=iga_loop)
     # この世代で終了するボタンを作成
@@ -150,7 +150,7 @@ def show_evaluation_UI(redraw=False):
     for i in range(8):
         generated_image_label[i].grid(row=(i//4), column=(i%4), padx=20, pady=20)
         if not redraw: sliders[i].set(50) # 表示/非表示の切り替え時はスライダーの値をリセットしない
-        if not redraw: add_prompt_slider.set(0) # 表示/非表示の切り替え時は追加スライダーの値をリセットしない
+        if not redraw: add_prompt_slider.set(100) # 表示/非表示の切り替え時は追加スライダーの値をリセットしない
         sliders[i].grid(row=(i//4)+2, column=(i%4), padx=5, pady=20, sticky="w")
         favorite_states[i] = False
         favorite_buttons[i].config(image=favorite_buttons[i].image_before)
