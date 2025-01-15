@@ -95,6 +95,7 @@ class ImageGenerator:
             # num_inference_steps * image_strengs = stepsとなるように調整
             # num_inference_steps = int(gene.steps / gene.image_strengs) + 1
             # num_inference_steps = int(4 / gene.image_strengs) + 1
+            num_inference_steps = int(4 / 0.6) + 1
 
             # positive_embeds, negative_embeds = self.token_auto_concat_embeds(pipe, prompt)
 
@@ -107,14 +108,14 @@ class ImageGenerator:
                 # strength = gene.image_strengs,
                 # generator = generator,
                 # guidance_scale = gene.cfg_scale,
-                # num_inference_steps = num_inference_steps,
+                num_inference_steps = num_inference_steps,
                 width = self.width, 
                 height = self.height,
                 
                 # ハードコーディング
-                strength = 0.4,
+                strength = 0.6,
                 guidance_scale = 0.0,
-                num_inference_steps = 10,
+                # num_inference_steps = 10,
                 # max_embeddings_multiples = 5.0, # デフォルトだと75トークンが限界なので5倍に拡張
                 # prompt_2 = positive_prompt,
                 # negative_prompt = negative_prompt,
