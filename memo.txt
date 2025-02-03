@@ -38,6 +38,7 @@ D:\downloads\develop\SD_IGA_system\sample_images\cozy_life.jpg
 
 
 -----以下はメモ-----
+カラフルな滑り台などの遊具がある子供向けの公園
 
 （変更記録）
 IGA_module_3.py までと IGA_module_4.py 以降で互換性はありません。引数の形式としてgenerationが追加され、かつgeneの形式も変更されています。

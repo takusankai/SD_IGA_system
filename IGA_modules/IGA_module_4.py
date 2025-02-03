@@ -177,7 +177,9 @@ def mutate(parent_gene_pairs, new_genes):
         for j in range(len(new_genes[i].weight_list)):
             if random.random() < weight_list_mutate_rate:
                 print(f"\033[96mgene[{i}]のweight_list[{j}]を{new_genes[i].weight_list[j]}から突然変異\033[0m")
-                new_genes[i].weight_list[j] = random.randint(0, 3)
+                # new_genes[i].weight_list[j] = random.randint(0, 3)
+                # 0 になる確率を 0.5、1 になる確率を 0.17、2 になる確率を 0.17、3 になる確率を 0.16 に設定
+                new_genes[i].weight_list[j] = random.choices([0, 1, 2, 3], [50, 17, 17, 16])[0]
                 print(f"\033[96mnew_genes[{i}].weight_list[{j}]: {new_genes[i].weight_list[j]}\033[0m")
 
     print("") # for 抜けたので改行
