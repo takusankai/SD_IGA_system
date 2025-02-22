@@ -1,6 +1,8 @@
 # SD_IGA_system の引き継ぎ用 README.md
 
-マークダウン形式で書かれています。github等のマークダウンが表示できる環境で閲覧下さい。<br>
+工学院大学牛田研 2025年卒業 j021328 の卒業論文における提案システムのリポジトリです。<br>
+マークダウン形式で環境構築と実装内容の説明が書かれています。<br>
+github等のマークダウンが表示できる環境でご閲覧下さい。<br>
 
 ## 環境構築方法
 
@@ -36,6 +38,8 @@
 <details>
 <summary>OpenAI APIキーの取得画面の例</summary>
 
+<br>
+
 ![OpenAI APIキーの取得](https://github.com/user-attachments/assets/12005de8-4e89-474e-84be-c0d02e19ef83)
 
 </details>
@@ -46,11 +50,11 @@
 
 <summary>Hugging Faceトークンの取得画面の例</summary>
 
+<br>
+
 ![Hugging Faceトークンの取得](https://github.com/user-attachments/assets/c4f7a9bc-4505-4bc8-bb87-b94b05b5f600)
 
 </details>
-
-<br>
 
 ## ディレクトリ構成と各ソースコードの実装意図に関する説明
 
