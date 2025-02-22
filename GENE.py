@@ -4,15 +4,17 @@ from typing import List
 from deep_translator import GoogleTranslator
 
 class Gene:
-    def __init__(self,
-                 image_strengs: float = 0.0,
-                 seed: int = 0,
-                 steps: int = 0,
-                 prompt_length: int = 0,
-                 cfg_scale: float = 0.0,
-                 weight_list: List[int] = None,
-                 this_image_path: str = "",
-                 evaluation_score: int = 0):
+    def __init__(
+        self,
+        image_strength: float = 0.0,
+        seed: int = 0,
+        steps: int = 0,
+        prompt_length: int = 0,
+        cfg_scale: float = 0.0,
+        weight_list: List[int] = None,
+        this_image_path: str = "",
+        evaluation_score: int = 0
+    ):
         
         # 初めに設定する
         self.image_strength = image_strength

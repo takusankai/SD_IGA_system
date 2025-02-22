@@ -10,10 +10,7 @@ def create_base_genes(input_text):
     print("\033[96m初期の8個の遺伝子を作成します\033[0m")
 
     # setting.env から範囲変数を読み込む
-    (image_strength_min, image_strength_max, seed_min, seed_max, steps_min, steps_max, 
-     prompt_length_min, prompt_length_max, cfg_scale_min, cfg_scale_max, 
-     image_mutate_rate, seed_mutate_rate, steps_mutate_rate, 
-     prompt_length_mutate_rate, cfg_scale_mutate_rate, weight_list_mutate_rate) = load_settings()
+    (image_strength_min, image_strength_max, seed_min, seed_max, steps_min, steps_max, prompt_length_min, prompt_length_max, cfg_scale_min, cfg_scale_max, _, _, _, _, _, _) = load_settings()
     
     # 初期の遺伝子となる8個のgeneのリストを作成
     genes = [Gene() for _ in range(8)]
@@ -186,7 +183,7 @@ def mutate(parent_gene_pairs, new_genes):
     return new_genes
 
 def load_settings():
-     # 範囲変数を setting.env から読み込む
+    # 範囲変数を setting.env から読み込む
     load_dotenv(dotenv_path='settings.env')
     if not os.path.exists('settings.env'):
         print('\033[96msettings.env の読み込みに失敗した為、初期遺伝子の設定はデフォルト値を使用します\033[0m')

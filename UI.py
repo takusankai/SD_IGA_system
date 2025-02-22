@@ -318,11 +318,7 @@ def iga_loop():
         print(f"\033[93m追加プロンプトとその強度: {additional_prompt}, {additional_prompt_strength}\033[0m")
         save_additional_prompt(before_additional_prompt, additional_prompt, additional_prompt_strength, True, generation)
     else:
-        # # 追加プロンプトが空の場合は GPT から生成させる
-        # additional_prompt = get_additional_prompt(input_text_label.cget("text")) GPT.py に get_additional_prompt は未実装
-        # additional_prompt_strength = random.randint(0, 100)
-        # print(f"\033[93m追加プロンプトとその強度: {additional_prompt}, {additional_prompt_strength}\033[0m")
-        # save_additional_prompt(additional_prompt, False, additional_prompt_strength, generation)
+        # 追加プロンプトが空の場合は GPT から生成させたい
         pass
 
     # 遺伝情報の表示/非表示の切り替え回数を保存
@@ -385,10 +381,7 @@ def iga_loop_end():
     if additional_prompt:
         save_additional_prompt(additional_prompt, additional_prompt_strength, True, generation)
     else:
-        # # 追加プロンプトが空の場合は GPT から生成させる
-        # additional_prompt = get_additional_prompt(input_text_label.cget("text")) GPT.py に get_additional_prompt は未実装
-        # additional_prompt_strength = random.randint(0, 100)
-        # save_additional_prompt(additional_prompt, False, additional_prompt_strength, generation)
+        # 追加プロンプトが空の場合は GPT から生成させたい
         pass
     # 遺伝情報の表示/非表示の切り替え回数を保存
     save_show_gene_count(show_gene_count, generation)

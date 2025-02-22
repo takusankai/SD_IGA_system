@@ -86,39 +86,39 @@ class ImageGenerator:
 
         for i, gene in enumerate(genes):
             prompt = ", ".join(gene.prompt())
-            generator = torch.Generator(device=self.device).manual_seed(gene.seed)  # シード指定
+
+            # シード指定
+            # generator = torch.Generator(device=self.device).manual_seed(gene.seed)
 
             # 品質系ポジティブ・ネガティブプロンプトを用意
             # positive_prompt = "realistic, masterpiece, best quality, high quality, ultra detailed, high resolution, 8K, HD"
             # negative_prompt = "worst quality, low quality, blurry, low resolution, out of focus, ugly, bad, poor quality, artifact, jpeg artifacts, error, broken"
 
-            # num_inference_steps * image_strength = stepsとなるように調整
-            # num_inference_steps = int(gene.steps / gene.image_strength) + 1
-            # num_inference_steps = int(4 / gene.image_strength) + 1
+            # num_inference_steps * image_strength = steps となるように調整することが必要
+            # （step数も画像の強さもgeneから使う）num_inference_steps = int(gene.steps / gene.image_strength) + 1
+            # （step数=4で画像の強さはgeneから使う）num_inference_steps = int(4 / gene.image_strength) + 1
             num_inference_steps = int(4 / 0.6) + 1
 
+            # プロンプトを埋め込みに変換して使う場合
             # positive_embeds, negative_embeds = self.token_auto_concat_embeds(pipe, prompt)
 
             result = pipe(
-                prompt,
-                # negative_prompt=neg_prompt,
-                # prompt_embeds=positive_embeds,
-                # negative_prompt_embeds=negative_embeds,
-                image = init_image,
-                # strength = gene.image_strength,
-                # generator = generator,
-                # guidance_scale = gene.cfg_scale,
-                num_inference_steps = num_inference_steps,
-                width = self.width, 
-                height = self.height,
+                prompt, # プロンプト
+                # prompt_embeds=positive_embeds, # 重み付けされたポジティブプロンプトの埋め込みを使う場合
+                # negative_prompt_embeds=negative_embeds, # 重み付けされたネガティブプロンプトの埋め込みを使う場合
+                image = init_image, # 初期画像
+                # strength = gene.image_strength, # 画像の強さ
+                # generator = generator, # シード値を指定する場合
+                # guidance_scale = gene.cfg_scale, # 画像のガイダンススケールを指定する場合
+                num_inference_steps = num_inference_steps, # サンプリングステップ数を指定する場合
+                width = self.width, # 画像の幅
+                height = self.height, # 画像の高さ
                 
                 # ハードコーディング
-                strength = 0.6,
-                guidance_scale = 0.0,
-                # num_inference_steps = 10,
-                # max_embeddings_multiples = 5.0, # デフォルトだと75トークンが限界なので5倍に拡張
-                # prompt_2 = positive_prompt,
-                # negative_prompt = negative_prompt,
+                strength = 0.6, # 画像の強さ
+                guidance_scale = 0.0, # 画像のガイダンススケール
+                # prompt_2 = positive_prompt, # 品質系ポジティブプロンプト用
+                # negative_prompt = negative_prompt, # 品質系ネガティブプロンプト用
             )
 
             image = result.images[0]
@@ -136,31 +136,32 @@ class ImageGenerator:
 
         for i, gene in enumerate(genes):
             prompt = ", ".join(gene.prompt())
-            # generator = torch.Generator(device=self.device).manual_seed(gene.seed)  # シード指定
+
+            # シード指定
+            # generator = torch.Generator(device=self.device).manual_seed(gene.seed)
 
             # 品質系ポジティブ・ネガティブプロンプトを用意
             # positive_prompt = "realistic, masterpiece, best quality, high quality, ultra detailed, high resolution, 8K, HD"
             # negative_prompt = "worst quality, low quality, blurry, low resolution, out of focus, ugly, bad, poor quality, artifact, jpeg artifacts, error, broken"
 
+            # プロンプトを埋め込みに変換して使う場合
             # positive_embeds, negative_embeds = self.token_auto_concat_embeds(pipe, prompt)
 
             result = pipe(
-                prompt,
-                # negative_prompt=neg_prompt,
-                # prompt_embeds=positive_embeds,
-                # negative_prompt_embeds=negative_embeds,
-                # generator = generator,
-                # guidance_scale = gene.cfg_scale,
-                # num_inference_steps = num_inference_steps,
-                width = self.width, 
-                height = self.height,
+                prompt, # プロンプト
+                # prompt_embeds=positive_embeds, # 重み付けされたポジティブプロンプトの埋め込みを使う場合
+                # negative_prompt_embeds=negative_embeds, # 重み付けされたネガティブプロンプトの埋め込みを使う場合
+                # generator = generator, # シード値を指定する場合
+                # guidance_scale = gene.cfg_scale, # 画像のガイダンススケールを指定する場合
+                # num_inference_steps = num_inference_steps, # サンプリングステップ数を指定する場合
+                width = self.width, # 画像の幅
+                height = self.height, # 画像の高さ
                 
                 # ハードコーディング
-                guidance_scale = 0.0,
-                num_inference_steps = 4,
-                # max_embeddings_multiples = 5.0, # デフォルトだと75トークンが限界なので5倍に拡張
-                # prompt_2 = positive_prompt,
-                # negative_prompt = negative_prompt,
+                guidance_scale = 0.0, # 画像のガイダンススケール
+                num_inference_steps = 4, # サンプリングステップ数
+                # prompt_2 = positive_prompt, # 品質系ポジティブプロンプト用
+                # negative_prompt = negative_prompt, # 品質系ネガティブプロンプト用
             )
 
             image = result.images[0]
@@ -170,50 +171,3 @@ class ImageGenerator:
             print(f"\033[94m{i+1}枚目の画像を生成しました: {image_path}\033[0m")
 
         return images, image_paths
-    
-    # >77問題は、単にlpw_stable_diffusion_xlを使用することで解決した
-    # 問題が再度発生する場合に備えて、代案である以下の重み付けの関数をコメントアウトして残しておく
-    # def token_auto_concat_embeds(self, pipe, prompt):
-    #     max_length = pipe.tokenizer.model_max_length
-    #     # positive_length = pipe.tokenizer(positive, return_tensors="pt").input_ids.shape[-1]
-    #     # negative_length = pipe.tokenizer(negative, return_tensors="pt").input_ids.shape[-1]
-        
-    #     # print(f'Token length is model maximum: {max_length}, positive length: {positive_length}, negative length: {negative_length}.')
-    #     # if max_length < positive_length or max_length < negative_length:
-    #     #     print('Concatenated embedding.')
-    #     #     if positive_length > negative_length:
-    #     #         positive_ids = pipe.tokenizer(positive, return_tensors="pt").input_ids.to("cuda")
-    #     #         negative_ids = pipe.tokenizer(negative, truncation=False, padding="max_length", max_length=positive_ids.shape[-1], return_tensors="pt").input_ids.to("cuda")
-    #     #     else:
-    #     #         negative_ids = pipe.tokenizer(negative, return_tensors="pt").input_ids.to("cuda")  
-    #     #         positive_ids = pipe.tokenizer(positive, truncation=False, padding="max_length", max_length=negative_ids.shape[-1],  return_tensors="pt").input_ids.to("cuda")
-    #     # else:
-    #     #     positive_ids = pipe.tokenizer(positive, truncation=False, padding="max_length", max_length=max_length,  return_tensors="pt").input_ids.to("cuda")
-    #     #     negative_ids = pipe.tokenizer(negative, truncation=False, padding="max_length", max_length=max_length, return_tensors="pt").input_ids.to("cuda")
-        
-    #     # positive_concat_embeds = []
-    #     # negative_concat_embeds = []
-    #     # for i in range(0, positive_ids.shape[-1], max_length):
-    #     #     positive_concat_embeds.append(pipe.text_encoder(positive_ids[:, i: i + max_length])[0])
-    #     #     negative_concat_embeds.append(pipe.text_encoder(negative_ids[:, i: i + max_length])[0])
-        
-    #     # positive_prompt_embeds = torch.cat(positive_concat_embeds, dim=1)
-    #     # negative_prompt_embeds = torch.cat(negative_concat_embeds, dim=1)
-
-    #     max_length = pipe.tokenizer.model_max_length
-
-    #     input_ids = pipe.tokenizer(prompt, return_tensors="pt").input_ids
-    #     input_ids = input_ids.to("cuda")
-
-    #     negative_ids = pipe.tokenizer("", truncation=False, padding="max_length", max_length=input_ids.shape[-1], return_tensors="pt").input_ids                                                                                                     
-    #     negative_ids = negative_ids.to("cuda")
-
-    #     concat_embeds = []
-    #     neg_embeds = []
-    #     for i in range(0, input_ids.shape[-1], max_length):
-    #         concat_embeds.append(pipe.text_encoder(input_ids[:, i: i + max_length])[0])
-    #         neg_embeds.append(pipe.text_encoder(negative_ids[:, i: i + max_length])[0])
-
-    #     prompt_embeds = torch.cat(concat_embeds, dim=1)
-    #     negative_prompt_embeds = torch.cat(neg_embeds, dim=1)
-    #     return prompt_embeds, negative_prompt_embeds
