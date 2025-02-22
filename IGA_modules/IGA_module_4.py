@@ -1,7 +1,7 @@
 # IGA_module_3.py の print メッセージは「シアン」\033[96m で表示される
 import random
 from GENE import Gene
-from GPT import create_base_dictionaly_from_GPT, mutate
+from GPT import create_base_dictionary_from_GPT, mutate
 import os
 from dotenv import load_dotenv
 
@@ -10,7 +10,7 @@ def create_base_genes(input_text):
     print("\033[96m初期の8個の遺伝子を作成します\033[0m")
 
     # setting.env から範囲変数を読み込む
-    (image_strengs_min, image_strengs_max, seed_min, seed_max, steps_min, steps_max, 
+    (image_strength_min, image_strength_max, seed_min, seed_max, steps_min, steps_max, 
      prompt_length_min, prompt_length_max, cfg_scale_min, cfg_scale_max, 
      image_mutate_rate, seed_mutate_rate, steps_mutate_rate, 
      prompt_length_mutate_rate, cfg_scale_mutate_rate, weight_list_mutate_rate) = load_settings()
@@ -19,8 +19,8 @@ def create_base_genes(input_text):
     genes = [Gene() for _ in range(8)]
     
     for i in range(8):
-        # image_strengs は image_strengs_min から image_strengs_max の間でランダムに生成
-        genes[i].image_strengs = round(random.uniform(image_strengs_min, image_strengs_max), 2)
+        # image_strength は image_strength_min から image_strength_max の間でランダムに生成
+        genes[i].image_strength = round(random.uniform(image_strength_min, image_strength_max), 2)
         # seed は seed_min から seed_max の間でランダムに生成
         genes[i].seed = random.randint(seed_min, seed_max)
         # steps は steps_min から steps_max の間でランダムに生成
@@ -36,9 +36,9 @@ def create_base_genes(input_text):
 
     print(f"\033[96m初期の8個の遺伝子を作成しました\033[0m")
 
-    # 折角 GPT を import してるので、ついでにここで prompt_dictionaly を作成
-    prompt_dictionaly = create_base_dictionaly_from_GPT(input_text)
-    return genes, prompt_dictionaly
+    # 折角 GPT を import してるので、ついでにここで prompt_dictionary を作成
+    prompt_dictionary = create_base_dictionary_from_GPT(input_text)
+    return genes, prompt_dictionary
 
 def create_next_generation_genes(genes, additional_prompt, additional_prompt_strength):
     print("\033[96m選択された遺伝的アルゴリズムは4番。\033[0m")
@@ -81,11 +81,11 @@ def select(genes):
     parent_gene_pairs = []
     for _ in range(4):
         # 評価を重みとして 0-7 のインデックスを選択
-        choiced_indices = random.choices(range(8), evaluation_scores, k=2)
-        while choiced_indices[0] == choiced_indices[1]:
-            choiced_indices = random.choices(range(8), evaluation_scores, k=2)
-        parent_gene_pairs.append((genes[choiced_indices[0]], genes[choiced_indices[1]]))
-        print(f"\033[96m選択された両親の遺伝子のインデックス: {choiced_indices}\033[0m")
+        selected_indices = random.choices(range(8), evaluation_scores, k=2)
+        while selected_indices[0] == selected_indices[1]:
+            selected_indices = random.choices(range(8), evaluation_scores, k=2)
+        parent_gene_pairs.append((genes[selected_indices[0]], genes[selected_indices[1]]))
+        print(f"\033[96m選択された両親の遺伝子のインデックス: {selected_indices}\033[0m")
 
     print("") # for 抜けたので改行
 
@@ -97,7 +97,7 @@ def crossover(parent_gene_pairs, new_genes):
 
     # すぐ下のループで使う
     def create_gene_data_list(gene):
-        gene_data_list = [gene.image_strengs, gene.seed, gene.steps, gene.prompt_length, gene.cfg_scale]
+        gene_data_list = [gene.image_strength, gene.seed, gene.steps, gene.prompt_length, gene.cfg_scale]
         gene_data_list.extend(gene.weight_list)
         return gene_data_list
 
@@ -106,7 +106,7 @@ def crossover(parent_gene_pairs, new_genes):
         cross_point = random.randint(1, 5 + length - 1)
         print(f"\033[96m{i}番目の両親の交叉点: {cross_point}\033[0m")
         
-        # gene_data_list (image_strengs, seed, steps, prompt_length, cfg_scale, weight_list[0], weight_list[1], ..., weight_list[length-1]) を作成
+        # gene_data_list (image_strength, seed, steps, prompt_length, cfg_scale, weight_list[0], weight_list[1], ..., weight_list[length-1]) を作成
         gene_data_list_1 = create_gene_data_list(parent_gene_pairs[i][0])
         gene_data_list_2 = create_gene_data_list(parent_gene_pairs[i][1])
         
@@ -119,13 +119,13 @@ def crossover(parent_gene_pairs, new_genes):
         print(f"\033[96mnew_gene_data_list_2: {new_gene_data_list_2}\033[0m")
 
         # new_gene_data_list_1 と new_gene_data_list_2 を new_genes に設定
-        new_genes[i*2].image_strengs = new_gene_data_list_1[0]
+        new_genes[i*2].image_strength = new_gene_data_list_1[0]
         new_genes[i*2].seed = new_gene_data_list_1[1]
         new_genes[i*2].steps = new_gene_data_list_1[2]
         new_genes[i*2].prompt_length = new_gene_data_list_1[3]
         new_genes[i*2].cfg_scale = new_gene_data_list_1[4]
         new_genes[i*2].weight_list = new_gene_data_list_1[5:]
-        new_genes[i*2+1].image_strengs = new_gene_data_list_2[0]
+        new_genes[i*2+1].image_strength = new_gene_data_list_2[0]
         new_genes[i*2+1].seed = new_gene_data_list_2[1]
         new_genes[i*2+1].steps = new_gene_data_list_2[2]
         new_genes[i*2+1].prompt_length = new_gene_data_list_2[3]
@@ -137,17 +137,17 @@ def crossover(parent_gene_pairs, new_genes):
 
 def mutate(parent_gene_pairs, new_genes):
     # setting.env から範囲変数と突然変異率を読み込む
-    (image_strengs_min, image_strengs_max, seed_min, seed_max, steps_min, steps_max, 
+    (image_strength_min, image_strength_max, seed_min, seed_max, steps_min, steps_max, 
      prompt_length_min, prompt_length_max, cfg_scale_min, cfg_scale_max, 
      image_mutate_rate, seed_mutate_rate, steps_mutate_rate, 
      prompt_length_mutate_rate, cfg_scale_mutate_rate, weight_list_mutate_rate) = load_settings()
 
     for i in range(8):
-        # image_strengs 突変は、image_mutate_rate の確率で image_strengs_min から image_strengs_max の間でランダムに生成
+        # image_strength 突変は、image_mutate_rate の確率で image_strength_min から image_strength_max の間でランダムに生成
         if random.random() < image_mutate_rate:
-            print(f"\033[96mgene[{i}]のimage_strengsを{new_genes[i].image_strengs}から突然変異\033[0m")
-            new_genes[i].image_strengs = round(random.uniform(image_strengs_min, image_strengs_max), 2)
-            print(f"\033[96mnew_genes[{i}].image_strengs: {new_genes[i].image_strengs}\033[0m")
+            print(f"\033[96mgene[{i}]のimage_strengthを{new_genes[i].image_strength}から突然変異\033[0m")
+            new_genes[i].image_strength = round(random.uniform(image_strength_min, image_strength_max), 2)
+            print(f"\033[96mnew_genes[{i}].image_strength: {new_genes[i].image_strength}\033[0m")
 
         # seed 突変は、seed_mutate_rate の確率で seed_min から seed_max の間でランダムに生成
         if random.random() < seed_mutate_rate:
@@ -191,8 +191,8 @@ def load_settings():
     if not os.path.exists('settings.env'):
         print('\033[96msettings.env の読み込みに失敗した為、初期遺伝子の設定はデフォルト値を使用します\033[0m')
     # 環境変数の取得(読み込めなければデフォルト値を使用するが、settings.env があれば基本使われない)
-    image_strengs_min = float(os.getenv("IMAGE_STRENGS_MIN", 0.1))
-    image_strengs_max = float(os.getenv("IMAGE_STRENGS_MAX", 0.6))
+    image_strength_min = float(os.getenv("IMAGE_STRENGTH_MIN", 0.1))
+    image_strength_max = float(os.getenv("IMAGE_STRENGTH_MAX", 0.6))
     seed_min = int(os.getenv("SEED_MIN", 0))
     seed_max = int(os.getenv("SEED_MAX", 100))
     steps_min = int(os.getenv("STEPS_MIN", 1))
@@ -201,14 +201,14 @@ def load_settings():
     prompt_length_max = int(os.getenv("PROMPT_LENGTH_MAX", 20))
     cfg_scale_min = float(os.getenv("CFG_SCALE_MIN", 6.0))
     cfg_scale_max = float(os.getenv("CFG_SCALE_MAX", 20.0))
-    image_mutate_rate = float(os.getenv("IMAGE_STRENGS_MUTATE_RATE", 0.1))
+    image_mutate_rate = float(os.getenv("IMAGE_STRENGTH_MUTATE_RATE", 0.1))
     seed_mutate_rate = float(os.getenv("SEED_MUTATE_RATE", 0.1))
     steps_mutate_rate = float(os.getenv("STEPS_MUTATE_RATE", 0.1))
     prompt_length_mutate_rate = float(os.getenv("PROMPT_LENGTH_MUTATE_RATE", 0.1))
     cfg_scale_mutate_rate = float(os.getenv("CFG_SCALE_MUTATE_RATE", 0.1))
     weight_list_mutate_rate = float(os.getenv("WEIGHT_LIST_MUTATE_RATE", 0.01))
 
-    return (image_strengs_min, image_strengs_max, seed_min, seed_max, steps_min, steps_max, 
+    return (image_strength_min, image_strength_max, seed_min, seed_max, steps_min, steps_max, 
             prompt_length_min, prompt_length_max, cfg_scale_min, cfg_scale_max, 
             image_mutate_rate, seed_mutate_rate, steps_mutate_rate, 
             prompt_length_mutate_rate, cfg_scale_mutate_rate, weight_list_mutate_rate)

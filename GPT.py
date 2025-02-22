@@ -23,9 +23,9 @@ def load_env_settings():
 
 # 遺伝子作成用の返答フォーマットの定義
 class CreateResponseFormat(BaseModel):
-    prompt_dictionaly: list[str]
+    prompt_dictionary: list[str]
 
-def create_base_dictionaly_from_GPT(input_text):
+def create_base_dictionary_from_GPT(input_text):
     print("\033[92mプロンプトを作成するためにGPTにアクセスします\033[0m")
 
     dictionary_size, dictionary_language = load_env_settings()
@@ -93,24 +93,24 @@ def create_base_dictionaly_from_GPT(input_text):
         response = completion.choices[0].message
 
         # レスポンスをstrのリストに変換
-        prompt_dictionaly = {word for word in response.parsed.prompt_dictionaly}
+        prompt_dictionary = {word for word in response.parsed.prompt_dictionary}
 
         # レスポンスが何個のプロンプト単語を含むリストであるかを確認
-        if len(prompt_dictionaly) == 50:
+        if len(prompt_dictionary) == 50:
             is_fifty_words = False
         else:
             print("\033[92m50個のプロンプト単語を含むリストが生成されていません\033[0m")
-        print(f"\033[92mレスポンスのプロンプト単語数: {len(prompt_dictionaly)}\033[0m")
+        print(f"\033[92mレスポンスのプロンプト単語数: {len(prompt_dictionary)}\033[0m")
 
     # レスポンスのプロンプト単語を確認
-    for i, word in enumerate(prompt_dictionaly):
+    for i, word in enumerate(prompt_dictionary):
         print(f"\033[92mレスポンスのプロンプト単語{i+1}: {word}\033[0m")
     
     # 生成に使われたトークン量を取得
     total_tokens = completion.usage.total_tokens
     print(f"\033[92m生成に使われたトークン量: {total_tokens}\033[0m")
     
-    return prompt_dictionaly
+    return prompt_dictionary
 
 # 遺伝子変異用の返答フォーマットの定義
 class MutateResponseFormat(BaseModel):

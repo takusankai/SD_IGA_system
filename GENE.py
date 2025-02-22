@@ -15,7 +15,7 @@ class Gene:
                  evaluation_score: int = 0):
         
         # 初めに設定する
-        self.image_strengs = image_strengs
+        self.image_strength = image_strength
         self.seed = seed
         self.steps = steps # 基本使わない
         self.prompt_length = prompt_length # 基本使わない
@@ -28,7 +28,7 @@ class Gene:
 
     def prompt(self):
         # dictionary_N.csv から読み込む
-        prompt_dictionaly = self.get_last_dictionaly()
+        prompt_dictionary = self.get_last_dictionary()
 
         # weight_list の値と組み合わせて、["(aaa:1.5)", "(bbb:0.5)"] のように返す
         # weight_list が 0 なら返さない、1 なら 0.5、2 ならそのまま、3 なら 1.5 とする
@@ -37,28 +37,28 @@ class Gene:
             if self.weight_list[i] == 0:
                 continue
             elif self.weight_list[i] == 1:
-                prompt.append(f"({prompt_dictionaly[i]}:0.5)")
+                prompt.append(f"({prompt_dictionary[i]}:0.5)")
             elif self.weight_list[i] == 2:
-                prompt.append(f"{prompt_dictionaly[i]}")
+                prompt.append(f"{prompt_dictionary[i]}")
             elif self.weight_list[i] == 3:
-                prompt.append(f"({prompt_dictionaly[i]}:1.5)")
+                prompt.append(f"({prompt_dictionary[i]}:1.5)")
         
         return prompt
     
-    def get_last_dictionaly(self):
+    def get_last_dictionary(self):
         dictionary_files = os.listdir("projects")
         dictionary_numbers = [int(f.split("_")[-1].split(".")[0]) for f in dictionary_files if f.startswith("dictionary_")]
         dictionary_numbers.sort()
         dictionary_name = "dictionary_" + str(dictionary_numbers[-1]) + ".csv"
-        last_dictionaly = []
+        last_dictionary = []
         # 項目建てもなく、1行に50個の単語が書かれたcsvを読み込み、リストにする
         with open(os.path.join("projects", dictionary_name), "r", encoding='utf-8') as f:
             reader = csv.reader(f)
             for row in reader:
-                # row の要素を最初から最後まで last_dictionaly に追加
-                last_dictionaly.extend(row)
+                # row の要素を最初から最後まで last_dictionary に追加
+                last_dictionary.extend(row)
         
-        return last_dictionaly
+        return last_dictionary
 
     def __str__(self):
         # prompt は結合し、翻訳する
@@ -67,7 +67,7 @@ class Gene:
         translated_prompt = translator.translate(prompt)
 
         return (
-            # f"参考画像の優先度: {self.image_strengs}\n"
+            # f"参考画像の優先度: {self.image_strength}\n"
             # f"シード値（乱数）: {self.seed}\n"
             f"プロンプト:\n{translated_prompt}\n"
         )

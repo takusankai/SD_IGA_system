@@ -89,12 +89,12 @@ class ImageGenerator:
             generator = torch.Generator(device=self.device).manual_seed(gene.seed)  # シード指定
 
             # 品質系ポジティブ・ネガティブプロンプトを用意
-            # positive_prompt = "realistic, masterpiece, best quality, high quality, ultla detailed, high resolution, 8K, HD"
-            # negative_prompt = "worst quality, low quality, blurry, low resolution, out of focus, ugly, bad, poor quality, artifact, jpeg artifacts, error, bloken"
+            # positive_prompt = "realistic, masterpiece, best quality, high quality, ultra detailed, high resolution, 8K, HD"
+            # negative_prompt = "worst quality, low quality, blurry, low resolution, out of focus, ugly, bad, poor quality, artifact, jpeg artifacts, error, broken"
 
-            # num_inference_steps * image_strengs = stepsとなるように調整
-            # num_inference_steps = int(gene.steps / gene.image_strengs) + 1
-            # num_inference_steps = int(4 / gene.image_strengs) + 1
+            # num_inference_steps * image_strength = stepsとなるように調整
+            # num_inference_steps = int(gene.steps / gene.image_strength) + 1
+            # num_inference_steps = int(4 / gene.image_strength) + 1
             num_inference_steps = int(4 / 0.6) + 1
 
             # positive_embeds, negative_embeds = self.token_auto_concat_embeds(pipe, prompt)
@@ -105,7 +105,7 @@ class ImageGenerator:
                 # prompt_embeds=positive_embeds,
                 # negative_prompt_embeds=negative_embeds,
                 image = init_image,
-                # strength = gene.image_strengs,
+                # strength = gene.image_strength,
                 # generator = generator,
                 # guidance_scale = gene.cfg_scale,
                 num_inference_steps = num_inference_steps,
@@ -139,8 +139,8 @@ class ImageGenerator:
             # generator = torch.Generator(device=self.device).manual_seed(gene.seed)  # シード指定
 
             # 品質系ポジティブ・ネガティブプロンプトを用意
-            # positive_prompt = "realistic, masterpiece, best quality, high quality, ultla detailed, high resolution, 8K, HD"
-            # negative_prompt = "worst quality, low quality, blurry, low resolution, out of focus, ugly, bad, poor quality, artifact, jpeg artifacts, error, bloken"
+            # positive_prompt = "realistic, masterpiece, best quality, high quality, ultra detailed, high resolution, 8K, HD"
+            # negative_prompt = "worst quality, low quality, blurry, low resolution, out of focus, ugly, bad, poor quality, artifact, jpeg artifacts, error, broken"
 
             # positive_embeds, negative_embeds = self.token_auto_concat_embeds(pipe, prompt)
 

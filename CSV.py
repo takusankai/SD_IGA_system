@@ -31,14 +31,14 @@ def init_project_csv(genes, image_paths):
     project_name = get_new_file_name("project")
 
     # project_name で新規プロジェクトcsvを作成し、情報を保存する
-    # id, generation, evaluation_score, this_image_path, image_strengs, seed, steps, prompt_length, cfg_scale, weight_1, weight_2, ..., weight_50
+    # id, generation, evaluation_score, this_image_path, image_strength, seed, steps, prompt_length, cfg_scale, weight_1, weight_2, ..., weight_50
     # idは1から8までの連番、世代は1、評価点数は0、this_image_pathは空
-    header = ["id", "generation", "evaluation_score", "this_image_path", "image_strengs", "seed", "steps", "prompt_length", "cfg_scale"] + [f"weight_{i+1}" for i in range(50)]
+    header = ["id", "generation", "evaluation_score", "this_image_path", "image_strength", "seed", "steps", "prompt_length", "cfg_scale"] + [f"weight_{i+1}" for i in range(50)]
     with open(os.path.join("projects", project_name), "w", newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow(header)
         for i, gene in enumerate(genes):
-            writer.writerow([i+1, 1, 0, image_paths[i], gene.image_strengs, gene.seed, gene.steps, gene.prompt_length, gene.cfg_scale, *gene.weight_list])
+            writer.writerow([i+1, 1, 0, image_paths[i], gene.image_strength, gene.seed, gene.steps, gene.prompt_length, gene.cfg_scale, *gene.weight_list])
 
 def init_favorite_csv():
     print("\033[93mお気に入り情報を保存するためのcsvを初期化します\033[0m")
@@ -52,15 +52,15 @@ def init_favorite_csv():
         writer = csv.writer(f)
         writer.writerow(["id", "generation", "favorite_image_path"])
 
-def init_dictionary_csv(prompt_dictionaly):
-    print("\033[93mprompt_dictionaly を新規辞書として保存します\033[0m")
+def init_dictionary_csv(prompt_dictionary):
+    print("\033[93mprompt_dictionary を新規辞書として保存します\033[0m")
     dictionary_name = get_new_file_name("dictionary")
 
     # dictionary_name で新規辞書csvを作成し、情報を保存する
-    # prompt_dictionaly の50個の要素を1行目にまとめて保存する
+    # prompt_dictionary の50個の要素を1行目にまとめて保存する
     with open(os.path.join("projects", dictionary_name), "w", newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
-        writer.writerow(prompt_dictionaly)
+        writer.writerow(prompt_dictionary)
 
 def init_show_gene_count_csv():
     print("\033[93m遺伝子表示回数を保存するためのcsvを初期化します\033[0m")
@@ -137,7 +137,7 @@ def save_genes_and_images(next_genes, image_paths, generation):
     with open(os.path.join("projects", project_name), "a", newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         for i, gene in enumerate(next_genes):
-            writer.writerow([generation * 8 - 7 + i, generation, 0, image_paths[i], gene.image_strengs, gene.seed, gene.steps, gene.prompt_length, gene.cfg_scale, *gene.weight_list])
+            writer.writerow([generation * 8 - 7 + i, generation, 0, image_paths[i], gene.image_strength, gene.seed, gene.steps, gene.prompt_length, gene.cfg_scale, *gene.weight_list])
 
 def save_additional_prompt(before_additional_prompt, additional_prompt, additional_prompt_strength, add_type, generation):
     # dictionary_n.csv に追加プロンプト単語を追加
@@ -146,18 +146,18 @@ def save_additional_prompt(before_additional_prompt, additional_prompt, addition
     # 1行目に書かれたプロンプト単語の末尾に追加プロンプト単語を追加し、再度書き込む
     with open(os.path.join("projects", project_name), "r+", newline='', encoding='utf-8') as f:
         reader = csv.reader(f)
-        prompt_dictionaly = list(reader)[0]
+        prompt_dictionary = list(reader)[0]
         
         # 追加プロンプトがリストであることを確認し、リストに追加
         if isinstance(additional_prompt, list):
-            prompt_dictionaly.extend(additional_prompt)
+            prompt_dictionary.extend(additional_prompt)
         else:
-            prompt_dictionaly.append(additional_prompt)
+            prompt_dictionary.append(additional_prompt)
         
         # ファイルの先頭に戻り、追加プロンプト単語を追加したリストを1行目に書き込む
         f.seek(0)
         writer = csv.writer(f)
-        writer.writerow(prompt_dictionaly)
+        writer.writerow(prompt_dictionary)
         f.truncate()
 
     # project_n.csv の header に weight_N+1 を追加し、すべての行の末尾に0を追加して書き換える
@@ -185,7 +185,7 @@ def save_additional_prompt(before_additional_prompt, additional_prompt, addition
     # additional_prompt_n.csv に追加プロンプト情報を保存
     additional_prompt_name = get_last_file_name("additional_prompt")
 
-    # generation, add_type(boolian), additional_prompt(str), additional_prompt_strength(int) を保存
+    # generation, add_type(boolean), additional_prompt(str), additional_prompt_strength(int) を保存
     with open(os.path.join("projects", additional_prompt_name), "a", newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow([generation, add_type, before_additional_prompt, additional_prompt_strength])
@@ -214,7 +214,7 @@ def get_last_generation_genes():
             # weight_list は第9要素以降の文字列を int のリストに変換
             weight_list = [int(w) for w in line[9:]]
             gene = Gene(
-                image_strengs=float(line[4]),
+                image_strength=float(line[4]),
                 seed=int(line[5]),
                 steps=int(line[6]),
                 prompt_length=int(line[7]),

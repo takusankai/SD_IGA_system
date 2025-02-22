@@ -33,7 +33,7 @@ show_gene_status = False
 # 評価UIにて、遺伝子情報の表示/非表示の切り替え回数を保持する変数
 show_gene_count = 0
 
-# 全UI要素を初期化し、メインイベントループを開始する
+# 全UI要素を宣言し、メインイベントループを開始する
 def setup_ui():
     global window, canvas, scrollbar, scrollable_frame, input_field, start_iga_loop_button, first_image_label, upload_button, input_text_label, explain_text_label, gene_data_frame, gene_data_label, generation_step_label, remaining_time_label, generated_image_frame, generated_image_label, sliders, favorite_buttons, before_star_image, after_star_image, add_prompt_frame, add_prompt_text_label, add_prompt_text, add_prompt_slider_label, add_prompt_slider, next_generation_button, end_loop_button, show_gene_switch, favorite_images_frame, end_message_label, exit_button
     window = tk.Tk()
@@ -55,6 +55,7 @@ def setup_ui():
     canvas.configure(yscrollcommand=scrollbar.set)
 
     # スクロールバーとキャンバスを配置
+    # マウスホイールで操作出来ない問題がある
     scrollbar.pack(side="right", fill="y")
     canvas.pack(side="left", fill="both", expand=True)
 
@@ -142,6 +143,7 @@ def show_generate_UI():
 
 # 評価UIを表示
 def show_evaluation_UI(redraw=False):
+    # 要素の配置
     clear_ui()
     input_text_label.pack(pady=10)
     explain_text_label.pack(pady=10)
@@ -172,6 +174,7 @@ def show_evaluation_UI(redraw=False):
 
 # 終了UIを表示
 def show_finish_UI():
+    # 要素の配置
     clear_ui()
     input_text_label.pack(pady=10)
     end_message_label.pack(pady=10)
@@ -179,6 +182,7 @@ def show_finish_UI():
     explain_text_label.pack(pady=10)
     explain_text_label.config(text="評価終了です。以下の画像がお気に入り画像として保存されました。")
     favorite_images_frame.pack(pady=10)
+
     # 最新の favorite_n.csv を読み込み、全てのお気に入り画像のパスを取得し、その数だけ favorite_images_frame の内にラベルを作成して表示する
     favorite_files = os.listdir("projects")
     favorite_numbers = [int(f.split("_")[-1].split(".")[0]) for f in favorite_files if f.startswith("favorite_")]
@@ -197,13 +201,16 @@ def show_finish_UI():
             favorite_image_label = tk.Label(favorite_images_frame, image=favorite_image)
             favorite_image_label.image = favorite_image
             favorite_image_label.grid(row=(i//4), column=(i%4), padx=20, pady=20)
+    
     exit_button.pack(pady=10)
 
+# UI 要素を全てクリアする
 def clear_ui():
     for widget in scrollable_frame.winfo_children():
         widget.pack_forget()
         widget.grid_forget()
 
+# 初期画像をアップロードするための関数
 def upload_image():
     global first_image_path
     first_image_path = filedialog.askopenfilename(
@@ -253,10 +260,10 @@ def first_iga_loop():
     remaining_time_label.config(text="およその残り時間: 30秒")
 
     # 8つの初期遺伝子とプロンプト辞書を作成し、表示する
-    genes, prompt_dictionaly = create_base_genes(input_text)
+    genes, prompt_dictionary = create_base_genes(input_text)
 
-    # csv に prompt_dictionaly を新規辞書として保存
-    init_dictionary_csv(prompt_dictionaly)
+    # csv に prompt_dictionary を新規辞書として保存
+    init_dictionary_csv(prompt_dictionary)
         
     for i, gene in enumerate(genes):
         gene_data_label[i].config(text=str(gene))
@@ -368,6 +375,7 @@ def iga_loop_generate_thread(next_genes):
         generated_image_label[i].config(image=image)
         generated_image_label[i].image = image
 
+# 生成システムを終了する際の保存処理
 def iga_loop_end():
     # 評価点数とお気に入り情報を保存
     save_user_evaluations()

@@ -11,15 +11,15 @@ def create_base_genes(input_text, input_image_path=None):
     print("\033[96m初期の8個の遺伝子を作成します\033[0m")
 
     # setting.env から範囲変数を読み込む
-    image_strengs_min, image_strengs_max, seed_min, seed_max, steps_min, steps_max, prompt_length_min, prompt_length_max, cfg_scale_min, cfg_scale_max, _, _, _ = load_settings()
+    image_strength_min, image_strength_max, seed_min, seed_max, steps_min, steps_max, prompt_length_min, prompt_length_max, cfg_scale_min, cfg_scale_max, _, _, _ = load_settings()
    
     genes = []
     length_list = [random.randint(prompt_length_min, prompt_length_max) for _ in range(8)]
     prompt_list = create_base_gene_prompts_from_GPT(length_list, input_text)
     
     for i in range(8):
-        # image_strengs は image_strengs_min から image_strengs_max の間でランダムに生成
-        image_strengs = round(random.uniform(image_strengs_min, image_strengs_max), 2)
+        # image_strength は image_strength_min から image_strength_max の間でランダムに生成
+        image_strength = round(random.uniform(image_strength_min, image_strength_max), 2)
         # seed は seed_min から seed_max の間でランダムに生成
         seed = random.randint(seed_min, seed_max)
         # steps は steps_min から steps_max の間でランダムに生成
@@ -30,22 +30,22 @@ def create_base_genes(input_text, input_image_path=None):
         cfg_scale = round(random.uniform(cfg_scale_min, cfg_scale_max), 1)
         
         if input_image_path == None:
-            gene = Gene("", image_strengs, seed, steps, prompt_length, cfg_scale, prompt_list[i], "", 0)
+            gene = Gene("", image_strength, seed, steps, prompt_length, cfg_scale, prompt_list[i], "", 0)
         else:
-            gene = Gene(input_image_path, image_strengs, seed, steps, prompt_length, cfg_scale, prompt_list[i], "", 0)
+            gene = Gene(input_image_path, image_strength, seed, steps, prompt_length, cfg_scale, prompt_list[i], "", 0)
         genes.append(gene)
 
     print(f"\033[96m初期の8個の遺伝子を作成しました\033[0m")
     return genes, prompt_list
 
 def create_next_generation_genes(genes):
-    print("\033[96m選択された遺伝的アルゴリズムは3番。画像 this を交叉対象に含めず、かつ strengs を下げることで変更性の向上を図ります\033[0m")
+    print("\033[96m選択された遺伝的アルゴリズムは3番。画像 this を交叉対象に含めず、かつ strength を下げることで変更性の向上を図ります\033[0m")
     print("\033[96mまた、失われると考えられる制御性は SD.py 側の LoRA, ControlNet、マスク画像にて対応します\033[0m")
 
     # 次の遺伝子となる8個のgene型のリストを宣言
     new_genes = []
     for i in range(8):
-        # init_image_path, image_strengs, seed, steps, prompt_length, cfg_scale, prompt, this_image_path, evaluation_score
+        # init_image_path, image_strength, seed, steps, prompt_length, cfg_scale, prompt, this_image_path, evaluation_score
         new_genes.append(Gene("", 0.0, 0, 0, 0, 0.0, [], "", 0))
     
     # 選択
@@ -56,11 +56,11 @@ def create_next_generation_genes(genes):
     parent_gene_pairs = []
     for _ in range(8):
         # 評価を重みとして 0-7 のインデックスを選択
-        choiced_index = random.choices(range(8), evaluation_scores, k=2)
-        while choiced_index[0] == choiced_index[1]:
-            choiced_index = random.choices(range(8), evaluation_scores, k=2)
-        parent_gene_pairs.append((genes[choiced_index[0]], genes[choiced_index[1]]))
-        print(f"\033[96m選択された両親の遺伝子のインデックス: {choiced_index}\033[0m")
+        selected_index = random.choices(range(8), evaluation_scores, k=2)
+        while selected_index[0] == selected_index[1]:
+            selected_index = random.choices(range(8), evaluation_scores, k=2)
+        parent_gene_pairs.append((genes[selected_index[0]], genes[selected_index[1]]))
+        print(f"\033[96m選択された両親の遺伝子のインデックス: {selected_index}\033[0m")
 
     print("") # for 抜けたので改行
 
@@ -78,28 +78,28 @@ def create_next_generation_genes(genes):
                 # parent_gene_pairs[i][1].this_image_path   # 4
             ]
             # 画像をランダムに選択
-            choiced_image_path = random.choice(image_paths)
-            new_genes[i].init_image_path = choiced_image_path
+            selected_image_path = random.choice(image_paths)
+            new_genes[i].init_image_path = selected_image_path
 
             # 選択された画像を識別するためのインデックスを取得
-            choiced_image_index = image_paths.index(choiced_image_path) + 1
+            selected_image_index = image_paths.index(selected_image_path) + 1
 
             # 選択された画像を識別するためのメッセージを表示
-            if choiced_image_index == 1:
+            if selected_image_index == 1:
                 print(f"\033[96m選択された画像: 1 (parent_gene_pairs[{i}][0].init_image_path)\033[0m")
-            elif choiced_image_index == 2:
+            elif selected_image_index == 2:
                 print(f"\033[96m選択された画像: 2 (parent_gene_pairs[{i}][1].init_image_path)\033[0m")
-            elif choiced_image_index == 3:
+            elif selected_image_index == 3:
                 print(f"\033[96m選択された画像: 3 (parent_gene_pairs[{i}][0].this_image_path)\033[0m")
-            elif choiced_image_index == 4:
+            elif selected_image_index == 4:
                 print(f"\033[96m選択された画像: 4 (parent_gene_pairs[{i}][1].this_image_path)\033[0m")
         else:
             # 両親の init_image がどちらも空の場合は、子も空とする
             new_genes[i].init_image_path = ""
             
-        # image_strengs の交叉は両親のどちらかの値をランダムに選択
-        new_genes[i].image_strengs = random.choice([parent_gene_pairs[i][0].image_strengs, parent_gene_pairs[i][1].image_strengs])
-        print(f"\033[96mnew_genes[{i}].image_strengs: {new_genes[i].image_strengs}\033[0m")
+        # image_strength の交叉は両親のどちらかの値をランダムに選択
+        new_genes[i].image_strength = random.choice([parent_gene_pairs[i][0].image_strength, parent_gene_pairs[i][1].image_strength])
+        print(f"\033[96mnew_genes[{i}].image_strength: {new_genes[i].image_strength}\033[0m")
     
     print("") # for 抜けたので改行
 
@@ -159,7 +159,7 @@ def create_next_generation_genes(genes):
     print("") # for 抜けたので改行
     
     # setting.env から範囲変数と突然変異率を読み込む
-    image_strengs_min, image_strengs_max, seed_min, seed_max, steps_min, steps_max, prompt_length_min, prompt_length_max, cfg_scale_min, cfg_scale_max, image_mutate_rate, status_mutate_rate, prompt_mutate_rate = load_settings()
+    image_strength_min, image_strength_max, seed_min, seed_max, steps_min, steps_max, prompt_length_min, prompt_length_max, cfg_scale_min, cfg_scale_max, image_mutate_rate, status_mutate_rate, prompt_mutate_rate = load_settings()
 
     # 突変
     # [image 突変] 突然変異率： image_mutate_rate
@@ -177,12 +177,12 @@ def create_next_generation_genes(genes):
                 new_genes[i].init_image_path = random.choice(mutate_image_list)
                 print(f"\033[96mnew_genes[{i}].init_image: {new_genes[i].init_image_path}\033[0m")
 
-    # image_strengs 突変は、image_mutate_rate の確率で image_strengs_min から image_strengs_max の間でランダムに生成
+    # image_strength 突変は、image_mutate_rate の確率で image_strength_min から image_strength_max の間でランダムに生成
     for i in range(8):
         if random.random() < image_mutate_rate:
-            print(f"\033[96mgene[{i}]のimage_strengsを{new_genes[i].image_strengs}から突然変異\033[0m")
-            new_genes[i].image_strengs = round(random.uniform(image_strengs_min, image_strengs_max), 2)
-            print(f"\033[96mnew_genes[{i}].image_strengs: {new_genes[i].image_strengs}\033[0m")
+            print(f"\033[96mgene[{i}]のimage_strengthを{new_genes[i].image_strength}から突然変異\033[0m")
+            new_genes[i].image_strength = round(random.uniform(image_strength_min, image_strength_max), 2)
+            print(f"\033[96mnew_genes[{i}].image_strength: {new_genes[i].image_strength}\033[0m")
     
     print("") # for 抜けたので改行
 
@@ -231,8 +231,8 @@ def load_settings():
     if not os.path.exists('settings.env'):
         print('\033[96msettings.env の読み込みに失敗した為、初期遺伝子の設定はデフォルト値を使用します\033[0m')
     # 環境変数の取得(読み込めなければデフォルト値を使用)
-    image_strengs_min = float(os.getenv("IMAGE_STRENGS_MIN", 0.1))
-    image_strengs_max = float(os.getenv("IMAGE_STRENGS_MAX", 0.6))
+    image_strength_min = float(os.getenv("IMAGE_STRENGTH_MIN", 0.1))
+    image_strength_max = float(os.getenv("IMAGE_STRENGTH_MAX", 0.6))
     seed_min = int(os.getenv("SEED_MIN", 0))
     seed_max = int(os.getenv("SEED_MAX", 10000))
     steps_min = int(os.getenv("STEPS_MIN", 1))
@@ -245,4 +245,4 @@ def load_settings():
     status_mutate_rate = float(os.getenv("STATUS_MUTATE_RATE", 0.3))
     prompt_mutate_rate = float(os.getenv("PROMPT_MUTATE_RATE", 0.3))
 
-    return image_strengs_min, image_strengs_max, seed_min, seed_max, steps_min, steps_max, prompt_length_min, prompt_length_max, cfg_scale_min, cfg_scale_max, image_mutate_rate, status_mutate_rate, prompt_mutate_rate
+    return image_strength_min, image_strength_max, seed_min, seed_max, steps_min, steps_max, prompt_length_min, prompt_length_max, cfg_scale_min, cfg_scale_max, image_mutate_rate, status_mutate_rate, prompt_mutate_rate
