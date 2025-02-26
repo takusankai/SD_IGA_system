@@ -34,6 +34,7 @@ class ImageGenerator:
 
     def _login_to_huggingface(self):
         token = os.getenv("HUGGINGFACE_TOKEN")
+        print("\033[94mHugging Faceにログインします。token:", token, "\033[0m")
         if token:
             login(token=token)
             print("\033[94mHugging Faceにログインしました。\033[0m")
