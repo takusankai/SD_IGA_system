@@ -16,23 +16,24 @@ github（[個人githubアカウントにて、なるべく public の状態で�
 5. 当フォルダ「SD_IGA_system」を任意の場所にコピペする
 6. vscode をインストールし、vscode 上でこのディレクトリを開き、`ctrl + @`などでターミナルも起動し、`PS 任意の場所/SD_IGA_system> `と表示されていることを確認する
 7. `pip install  -r requirement.txt`を実行し、使用するライブラリをインストールする
-8. 使用する環境に応じて、以下のいずれかの手順でPyTorchをインストールする
+8. 使用する環境に応じて、以下のいずれかの手順で PyTorch をインストールする
     1. （NVIDIA GeForce RTX 3060 Ti を使用）`pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124`を実行し pytorch をインストールする（最新バージョンは 「[PyTorch公式サイト](https://pytorch.org/)」のページで 「Compute Platform」が「cu124」の物を探せば良い）
     2. （上記以外の GPU を使用）GPU の型番に合った GPU ドライバを調べてインストールし、その GPU ドライバに合ったバージョンの pytorch を調べてインストールする
     3. （GPU を非使用）`pip install torch`を実行 pytorch をインストールする（恐らく最新バージョンで問題無いが、動作確認済みバージョンは`pip install torch==2.6.0`）
 
-### openai の API キーと hugging face の token の設定
+### openai の API キーと hugging face の token などの設定
 9. 「[OpenAI Platform](https://platform.openai.com/docs/overview)」にアクセスしてログインする
 10. 諸設定（クレジットカードの登録と最小5ドルの課金を含む）を完了させ、API キーを作成し取得する（以下にある画像を参考）
-11. SD_IGA_system 内にある「OPENAI_API_KEY.env」に API キーを書き加えて保存する
+11. SD_IGA_system 内にある「OPENAI_API_KEY.env」の`OPENAI_API_KEY`に API キーを書き加えて保存する
 12. 「[Hugging Face](https://huggingface.co/)」にアクセスしてログインする
 13. 設定内の「Access Tokens」から Token を作成し取得する（以下にある画像を参考）
-14. SD_IGA_system 内にある「settings.env」の一番下に token を書き加えて保存する
+14. SD_IGA_system 内にある「settings.env」の一番下の`GENERATE_PATH`に token を書き加えて保存する
+15. SD_IGA_system 内にある「settings.env」の下から二番目の`HUGGINGFACE_TOKEN`に正しく「generated_images」までのパスをコピペする
 
 ### システムの起動
-15. 上述したターミナル`PS 任意の場所/SD_IGA_system> `にて、`python UI.py`を実行する
-16. 初回の画像生成実行時は、画像生成AIモデル（10GB 程度）のダウンロードが入るため時間がかかる。
-17. 実行すると「画像、お気に入り画像、csvファイル5点」が作られる。既存のものがある場合は連番で作っていくので、混ざって取り扱いにくくならないよう、予めこまめに削除や移動しておくことが推奨される。
+16. 上述したターミナル`PS 任意の場所/SD_IGA_system> `にて、`python UI.py`を実行する
+17. 初回の画像生成実行時は、画像生成AIモデル（10GB 程度）のダウンロードが入るため時間がかかる。
+18. 実行すると「画像、お気に入り画像、csvファイル5点」が作られる。既存のものがある場合は連番で作っていくので、混ざって取り扱いにくくならないよう、予めこまめに削除や移動しておくことが推奨される。なお初期では、仮に一度実行した状態としている。
 <br>
 
 <details>
@@ -106,27 +107,29 @@ github（[個人githubアカウントにて、なるべく public の状態で�
 
 ### ディレクトリ構成図とそれぞれの説明書き
 
-SD_IGA_system               : 提案システムです。作成目的は卒論をご確認ください。<br>
-├── generated_images        : 無ければシステムが作成します。実行結果として生成された画像が全て保管され、ここを参照してUI表示します。<br>
-├── favorite_images         : 無ければシステムが作成します。お気に入りに選択された画像がここに複製されます。<br>
-├── sample_images           : 画像生成の初期画像として使えるかなと思った画像がストックされています。特に「cozy_life.jpg」と「yoyogi.jpg」は実験タスクで使用した初期画像です。<br>
-├── projects                : csv 形式で実行時の情報をここに保存します。<br>
-│ ├── dictionary.csv        : これだけ画像生成前に生成されます。GPTの返答結果の50件が書き込まれます<br>
-│ ├── project.csv           : 全ての遺伝子が記録されるメインの csv です。<br>
-│ ├── favorite.csv          : お気に入りに選択された画像の遺伝子を記録します。<br>
-│ ├── additional_prompt.csv : 世代ごとの追加プロンプト機能の使用を記録します。<br>
-│ └── show_gene_count.csv   : 世代ごとの生成元プロンプト確認機能の使用を記録します。<br>
-├── IGA_modules             : 複数の IGA アルゴリズムを切り替える想定でしたが、実際はしませんでした。<br>
-│ ├── IGA_modules_1.py～3.py : 実装途中の物で、見る必要はありません。<br>
-│ └── IGA_modules_4.py      : 実験に使っているIGAのアルゴリズムのソースコードです。上述の通りです。<br>
-├── .gitattributes/.gitignore : git 関連の自動生成されたファイルです。<br>
-├── requirements.txt        : 実行に必要な python のライブラリが書かれた自動生成ファイルです。<br>
-├── before_star_image.png/after_star_image.png : UIにボタンとして表示する画像です<br>
-├── OPENAI_API_KEY.env      : ここに GPT の API キーを書かないとエラーになります。<br>
-├── settings.env            : 末尾に huggingface の token を書かないとエラーになります。他の変数は画像生成パラメータ等の調整・管理を容易にする目的で作成しましたが、最終的に利用していないか変更する必要が無い状態です。<br>
-├── memo.txt                : プロンプトを書き置く必要がある際に使用していました。<br>
-├── UI.py                   : 上述の通りです。<br>
-├── SD.py                   : 上述の通りです。<br>
-├── GPT.py                  : 上述の通りです。<br>
-├── GENE.py                 : 上述の通りです。<br>
-└── CSV.py                  : 上述の通りです。<br>
+SD_IGA_system                   : 提案システムです。作成目的は卒論をご確認ください。<br>
+├── generated_images            : 無ければシステムが作成します。実行結果として生成された画像が全て保管され、ここを参照して UI 表示します。<br>
+├── favorite_images             : 無ければシステムが作成します。お気に入りに選択された画像がここに複製されます。<br>
+├── sample_images               : 画像生成の初期画像として使えるかなと思った画像がストックされています。特に「cozy_life.jpg」と「yoyogi.jpg」は実験タスクで使用した初期画像です。<br>
+├── projects                    : csv 形式で実行時の情報をここに保存します。<br>
+│ ├── dictionary.csv            : これだけ画像生成前に生成されます。GPT の返答結果の50件が書き込まれます<br>
+│ ├── project.csv               : 全ての遺伝子が記録されるメインの csv です。<br>
+│ ├── favorite.csv              : お気に入りに選択された画像の遺伝子を記録します。<br>
+│ ├── additional_prompt.csv     : 世代ごとの追加プロンプト機能の使用を記録します。<br>
+│ └── show_gene_count.csv       : 世代ごとの生成元プロンプト確認機能の使用を記録します。<br>
+├── IGA_modules                 : 複数の IGA アルゴリズムを切り替える想定でしたが、実際はしませんでした。<br>
+│ ├── IGA_modules_1.py~3.py     : 実装途中の物で、見る必要はありません。<br>
+│ └── IGA_modules_4.py          : 実験に使っている IGA のアルゴリズムのソースコードです。上述の通りです。<br>
+├── __pycache__                 : 研究室の NAS からダウンロードした場合はこれがあります。python 実行により自動生成されるディレクトリです。中身を気にする必要はありません。<br>
+├── venv　　　　　               : 研究室の NAS からダウンロードした場合はこれがあります。`.\venv\Scripts\activate`をターミナルで実行するのみでライブラリの設定が完了できますが、pytorch のバージョンは2.5.1+cu124です。<br>
+├── .gitattributes / .gitignore : git 関連の自動生成されたファイルです。<br>
+├── requirements.txt            : 実行に必要な python のライブラリが書かれた自動生成ファイルです。<br>
+├── before_star_image.png/after_star_image.png     : UIにボタンとして表示する画像です<br>
+├── OPENAI_API_KEY.env          : ここに GPT の API キーを書かないとエラーになります。<br>
+├── settings.env                : 末尾に正しい「generated_images」までのパスと huggingface の token を書かないとエラーになります。他の変数は画像生成パラメータ等の調整・管理を容易にする目的で作成しましたが、最終的に利用していないか変更する必要が無い状態です。<br>
+├── memo.txt                    : プロンプトを書き置く必要がある際に使用していました。<br>
+├── UI.py                       : 上述の通りです。<br>
+├── SD.py                       : 上述の通りです。<br>
+├── GPT.py                      : 上述の通りです。<br>
+├── GENE.py                     : 上述の通りです。<br>
+└── CSV.py                      : 上述の通りです。<br>
